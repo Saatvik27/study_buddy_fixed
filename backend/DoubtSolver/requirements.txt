@@ -1,0 +1,7 @@
+Flask
+flask-cors
+torch
+transformers
+llama_index
+llama-index-embeddings-huggingface
+llama-index-llms-groq
