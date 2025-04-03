@@ -54,7 +54,7 @@ const ChatWithUpload = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ user_id: user.uid }),
       });
@@ -78,6 +78,8 @@ const ChatWithUpload = () => {
       console.error("Error checking vectors:", error);
     }
   };
+
+
 
   const fetchChatHistory = async (userId) => {
     try {

@@ -44,7 +44,7 @@ const Flashcards = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ user_id: user.uid }),
       });
@@ -78,7 +78,7 @@ const Flashcards = () => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          "Authorization": `Bearer ${token}`,
         },
         body: JSON.stringify({ topic, user_id: user.uid }),
       });
