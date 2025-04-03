@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import UploadComponent from "./uploadcomponent.jsx";
 import Navbar from "./navbar.jsx";
 import NoDocumentsPrompt from "./nodocumentsprompt.jsx";
+import backendconfig from "../../backendconfig.js";
 
 const Flashcards = () => {
   const [topic, setTopic] = useState("");
@@ -39,7 +40,7 @@ const Flashcards = () => {
       const user = auth.currentUser;
       if (!user) return;
       const token = await user.getIdToken();
-      const response = await fetch("http://127.0.0.1:8000/check_vectors", {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/check_vectors`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -73,7 +74,7 @@ const Flashcards = () => {
         throw new Error("User not authenticated.");
       }
       const token = await user.getIdToken();
-      const response = await fetch("http://127.0.0.1:8000/generate_flashcards", {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/generate_flashcards`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -6,6 +6,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import Navbar from './navbar.jsx'; 
 import UploadComponent from './uploadcomponent.jsx';
 import NoDocumentsPrompt from './nodocumentsprompt.jsx';
+import backendconfig from '../../backendconfig.js';
 
 const QuizState = {
   INITIAL: 'initial',
@@ -58,7 +59,7 @@ const Questionnaire = () => {
       if (!user) return;
 
       const token = await user.getIdToken();
-      const response = await fetch('http://127.0.0.1:8000/check_vectors', {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/check_vectors`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +92,7 @@ const Questionnaire = () => {
         }
 
         const token = await user.getIdToken();
-        const response = await fetch('http://127.0.0.1:8000/generate_mcqs', {
+        const response = await fetch(`${backendconfig.apiBaseUrl}/generate_mcqs`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -194,7 +195,7 @@ const Questionnaire = () => {
           throw new Error('User not authenticated');
         }
         const token = await user.getIdToken();
-        const response = await fetch('http://127.0.0.1:8000/save_quiz_results', {
+        const response = await fetch(`${backendconfig.apiBaseUrl}/save_quiz_results`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

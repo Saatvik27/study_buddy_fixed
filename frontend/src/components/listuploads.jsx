@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { UserContext } from '../contexts/usercontext.jsx';
+import backendconfig from '../../backendconfig.js';
 
 const ListUploads = () => {
   const [uploads, setUploads] = useState([]);
@@ -11,7 +12,7 @@ const ListUploads = () => {
     const fetchUploads = async () => {
       try {
         setLoading(true);
-        const response = await fetch('http://127.0.0.1:8000/list_user_uploads', {
+        const response = await fetch(`${backendconfig.apiBaseUrl}/list_user_uploads`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ user_id: user.uid }),
@@ -42,7 +43,7 @@ const ListUploads = () => {
       return;
     }
     try {
-      const response = await fetch('http://127.0.0.1:8000/delete_user_uploads', {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/delete_user_uploads`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ download_url }),

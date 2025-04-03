@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import UploadComponent from "./uploadcomponent.jsx";
 import Navbar from "./navbar.jsx";
 import NoDocumentsPrompt from "./nodocumentsprompt.jsx";
+import backendconfig from "../../backendconfig.js";
 
 const ChatWithUpload = () => {
   const [hasVectors, setHasVectors] = useState(false);
@@ -49,7 +50,7 @@ const ChatWithUpload = () => {
       if (!user) return; // onAuthStateChanged will handle redirect
 
       const token = await user.getIdToken();
-      const response = await fetch("http://127.0.0.1:8000/check_vectors", {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/check_vectors`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +81,7 @@ const ChatWithUpload = () => {
 
   const fetchChatHistory = async (userId) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/get_chats", {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/get_chats`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ user_id: userId }),
@@ -130,7 +131,7 @@ const ChatWithUpload = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/chat", {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: messageText, user_id: user.uid }),

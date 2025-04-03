@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { getAuth } from "firebase/auth";
 import { supabase } from "../supabase/supabaseclient.js";
+import backendconfig from "../../backendconfig.js";
 
 const UploadComponent = ({ onUploadComplete, className = "" }) => {
   const [file, setFile] = useState(null);
@@ -116,7 +117,7 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
       }, 400);
       
       // Send a request to create vectors on the backend.
-      const response = await fetch("http://127.0.0.1:8000/generate_vectors", {
+      const response = await fetch(`${backendconfig.apiBaseUrl}/generate_vectors`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ file_url: publicUrl, user_id: user.uid }),
