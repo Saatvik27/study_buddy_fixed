@@ -7,7 +7,7 @@ const About = () => {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="bg-gray-900 bg-opacity-50 text-white py-20">
+      <section className="bg-gray-900 bg-opacity-50 text-[#EBEBEB]py-20">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-6xl font-bold mb-4">About Us</h1>
           <p className="text-lg md:text-2xl">
@@ -83,7 +83,7 @@ const About = () => {
       </section>
 
       {/* Contact Section */}
-      <section className="bg-gray-900 bg-opacity-50 text-white py-16">
+      <section className="bg-gray-900 bg-opacity-50 text-[#EBEBEB]py-16">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold mb-4">Get in Touch</h2>
           <p className="mb-8">
@@ -99,7 +99,7 @@ const About = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-6">
+      <footer className="bg-gray-800 text-[#EBEBEB]py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center">
           <p>&copy; {new Date().getFullYear()} MyWebsite. All rights reserved.</p>
           <div className="flex space-x-4 mt-4 md:mt-0">

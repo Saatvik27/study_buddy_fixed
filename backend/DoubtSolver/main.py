@@ -1,33 +1,33 @@
 import os
 import warnings
-import json
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
 from llama_index.llms.groq import Groq
+import json
+import firebase_admin
+from firebase_admin import credentials, firestore
+from firebase_admin import firestore
 
-# Additional imports for loading embeddings from Supabase
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.core import (
-    StorageContext,
-    Settings,
-    load_index_from_storage
-)
+# Import custom modules
+from vector import create_vector_index_from_url, query_vector_from_supabase, check_user_vectors
 
-# Import custom modules for vector creation/checking
-from vector import create_vector_index_from_url, check_user_vectors, query_vector_from_supabase
+# Import supabase client
+from supabase import create_client, Client
 
 # Suppress warnings and load environment variables
 warnings.filterwarnings('ignore')
 load_dotenv()
 
-# Constants and configuration
+firebase_creds_path = "studybuddy-681c2-firebase-adminsdk-fbsvc-d5c7bd9100.json"
+if not firebase_admin._apps:
+    cred = credentials.Certificate(firebase_creds_path)
+    firebase_admin.initialize_app(cred)
+db = firestore.client()
+
 MODEL_PATH = "sentence-transformers/all-mpnet-base-v2"  # Embedding model used on Supabase vectors
-LLM_MODEL = "llama3-70b-8192"  # LLM model for Groq
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # Initialize Supabase client
-from supabase import create_client, Client
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -37,15 +37,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
 
 # Chat history for conversation context (global, per session)
-user_chat_histories = {}
-
-# For custom settings, we add a new field to hold the embedding vector.
-# This value is updated on each vector query.
-class Settings:
-    embed_model = None
-    llm = None
-    node_parser = None
-    embedding_context = None
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+MAX_CHARACTERS=2000
+max_chats=10
 
 @app.route('/generate_vectors', methods=['POST'])
 def generate_vectors():
@@ -81,6 +75,7 @@ def check_vectors():
 
     user_id = data["user_id"]
     exists = check_user_vectors(user_id)
+
     return jsonify({"status": "success", "exists": exists})
 
 @app.route('/generate_flashcards', methods=['POST'])
@@ -88,7 +83,6 @@ def generate_flashcards():
     """
     Generate flashcards based on a provided topic.
     Expects a JSON payload: { "topic": "<your_topic>", "user_id": "<user-id>" }.
-    Uses the raw embedding vector stored in Supabase to update the Settings.
     """
     try:
         data = request.get_json()
@@ -98,32 +92,40 @@ def generate_flashcards():
         topic = data["topic"]
         user_id = data["user_id"]
 
-        # Retrieve the raw embedding vector from Supabase.
-        result = query_vector_from_supabase(topic, user_id)
-        retrieved_vector = result.get("vector", [])
-        # Update Settings with the raw vector.
-        Settings.embedding_context = retrieved_vector
+        # Query Supabase for relevant content
+        vector_result = query_vector_from_supabase(topic, user_id)
+        relevant_content = vector_result.get("output", "")
 
-        # Construct a refined prompt for the LLM.
-        # Here we indicate that a custom embedding context is loaded (without sending raw numbers).
+        # Construct a refined prompt for LLM
         llm_prompt = f"""
-        A custom embedding context has been loaded into your settings.
-        Generate exactly 10 unique flashcards on the topic "{topic}" in valid JSON format.
+        Based on the following information from the document:
+        {relevant_content}
+        
+        Generate exactly 10 unique flashcards on the topic "{topic}" in **valid JSON format**.
+        
         Each flashcard must:
-          - Cover a distinct concept or piece of information
-          - Not overlap significantly with other flashcards
-          - Have "front": A concise question or keyword
-          - Have "back": A short, clear explanation or answer
-        Return only a JSON array (no extra text), e.g.:
+        - Cover a distinct concept or piece of information
+        - Not overlap significantly with other flashcards
+        - Have "front": A concise question or keyword
+        - Have "back": A short, clear explanation or answer
+        
+        Before finalizing, verify that each flashcard addresses a different aspect of the topic.
+        
+        Strictly return only a JSON array, like this:
+        
         [
             {{"front": "What is Newton's First Law?", "back": "An object at rest stays at rest unless acted upon by an external force."}},
             {{"front": "What is the capital of France?", "back": "Paris"}}
         ]
+        
+        DO NOT include any extra text or explanations. Return **only JSON**.
         """
 
-        llm = Groq(model=LLM_MODEL, api_key=GROQ_API_KEY)
+        # Send prompt to Groq LLM
+        llm = Groq(model="llama3-70b-8192", api_key=GROQ_API_KEY)
         response = llm.complete(llm_prompt)
 
+        # Extract and parse flashcards
         flashcards_text = response.text if hasattr(response, 'text') else str(response)
         try:
             flashcards = json.loads(flashcards_text)
@@ -141,7 +143,6 @@ def generate_mcqs():
     """
     Generate multiple-choice questions (MCQs) based on a provided topic.
     Expects a JSON payload: { "topic": "<your_topic>", "user_id": "<user-id>" }.
-    Uses the raw embedding vector stored in Supabase to update the Settings.
     """
     try:
         data = request.get_json()
@@ -150,33 +151,46 @@ def generate_mcqs():
 
         topic = data["topic"]
         user_id = data["user_id"]
+        
+        # Query Supabase for relevant content
+        vector_result = query_vector_from_supabase(topic, user_id)
+        relevant_content = vector_result.get("output", "")
 
-        # Retrieve the raw embedding vector from Supabase.
-        result = query_vector_from_supabase(topic, user_id)
-        retrieved_vector = result.get("vector", [])
-        Settings.embedding_context = retrieved_vector
-
+        # Construct refined prompt for LLM
         llm_prompt = f"""
-        A custom embedding context has been loaded into your settings.
+        Based on the following information from the document:
+        {relevant_content}
+
         Generate exactly 15 unique multiple-choice questions (MCQs) on the topic "{topic}".
+        Each MCQ must:
+        - Cover a distinct concept or fact from the document
+        - Not overlap significantly with other questions
+        - Test different aspects of the topic
+        
         Each MCQ must contain exactly four fields:
-          - "question": A concise question.
-          - "options": An array of exactly 4 unique answer options.
-          - "correct_answer": The correct answer (one of the options).
-          - "explanation": A brief explanation of the correct answer.
-        Return only a JSON array in the following format:
+        - "question": A concise question.
+        - "options": An array of exactly 4 unique answer options.
+        - "correct_answer": The correct answer, which must be one of the 4 options.
+        - "explanation": A brief explanation of the correct answer.
+
+        Before finalizing, verify that each question addresses a different aspect of the topic and tests unique knowledge.
+
+        Your response must be a valid JSON array and nothing else. Do not include any explanations, markdown formatting, or code blocks. Return the raw JSON array only.
+        
+        Here's the exact format:
         [
-            {{"question": "What is the capital of France?", "options": ["Berlin", "Madrid", "Paris", "Rome"], "correct_answer": "Paris", "explanation": "Paris is the capital of France."}},
-            {{"question": "Which element has atomic number 1?", "options": ["Helium", "Oxygen", "Hydrogen", "Nitrogen"], "correct_answer": "Hydrogen", "explanation": "Hydrogen has atomic number 1."}},
-            ... (12 more MCQs)
+          {{"question": "What is the capital of France?", "options": ["Berlin", "Madrid", "Paris", "Rome"], "correct_answer": "Paris", "explanation": "Paris is the capital of France."}},
+          {{"question": "Which element has the atomic number 1?", "options": ["Helium", "Oxygen", "Hydrogen", "Nitrogen"], "correct_answer": "Hydrogen", "explanation": "Hydrogen has atomic number 1."}},
+          ... (12 more MCQs)
         ]
         """
 
-        llm = Groq(model=LLM_MODEL, api_key=GROQ_API_KEY)
+        # Send prompt to Groq LLM
+        llm = Groq(model="llama3-70b-8192", api_key=GROQ_API_KEY)
         response = llm.complete(llm_prompt)
-
+        
+        # Extract text from response
         mcqs_text = response.text if hasattr(response, 'text') else str(response)
-        # Remove markdown formatting if present
         mcqs_text = mcqs_text.replace("```json", "").replace("```", "").strip()
         
         import re
@@ -189,6 +203,7 @@ def generate_mcqs():
         
         try:
             mcqs = json.loads(mcqs_text)
+            
             valid_mcqs = []
             for mcq in mcqs:
                 if (isinstance(mcq, dict) and 
@@ -199,23 +214,49 @@ def generate_mcqs():
                     len(mcq["options"]) == 4 and
                     mcq["correct_answer"] in mcq["options"]):
                     valid_mcqs.append(mcq)
+            
             if not valid_mcqs:
                 raise ValueError("No valid MCQs found in the response")
+                
             return jsonify({"mcqs": valid_mcqs})
+            
         except json.JSONDecodeError as e:
             app.logger.error(f"JSON parsing error: {str(e)}, Response text: {mcqs_text}")
-            return jsonify({"error": "Failed to parse LLM response as valid JSON", "raw_response": mcqs_text}), 500
-
+            return jsonify({"error": "Failed to parse LLM response as valid JSON", 
+                           "raw_response": mcqs_text}), 500
+    
     except Exception as e:
         app.logger.error(f"Error in generate_mcqs: {str(e)}")
         return jsonify({"error": f"Failed to generate MCQs: {str(e)}"}), 500
 
+
+
+@app.route('/get_chats', methods=['POST'])
+def get_chats():
+    try:
+        data = request.get_json()
+        if not data or "user_id" not in data:
+            return jsonify({"error": "Missing user_id"}), 400
+
+        user_id = data["user_id"]
+        chats_ref = db.collection("chats")
+        query = chats_ref.where("user_id", "==", user_id) \
+                         .order_by("timestamp", direction=firestore.Query.DESCENDING) \
+                         .limit(5)
+        results = query.get()
+
+        latest_chats = [doc.to_dict() for doc in results]
+        latest_chats.reverse()
+
+        return jsonify({"chats": latest_chats})
+    
+    except Exception as e:
+        app.logger.error(f"Error fetching chats: {str(e)}")
+        return jsonify({"error": f"Failed to retrieve chats: {str(e)}"}), 500
+
+
 @app.route('/chat', methods=['POST'])
 def chat():
-    """
-    Chat endpoint that uses the raw embedding vector stored in Supabase for context.
-    Expects a JSON payload: { "message": "<user-message>", "user_id": "<user-id>" }.
-    """
     try:
         data = request.get_json()
         if not data or "message" not in data or "user_id" not in data:
@@ -223,50 +264,92 @@ def chat():
 
         message = data["message"]
         user_id = data["user_id"]
-
-        if user_id not in user_chat_histories:
-            user_chat_histories[user_id] = []
         
-        user_history = user_chat_histories[user_id]
-        recent_history = user_history[-5:] if len(user_history) > 5 else user_history
-        combined_history = "\n".join([
-            f"Previous message = User: {user_msg}\nAssistant: {bot_msg}"
-            for user_msg, bot_msg in recent_history
-        ])
+        vector_result = query_vector_from_supabase(message, user_id)
+        relevant_content = vector_result.get("output", "No relevant information found.")
 
-        # Retrieve the raw embedding vector from Supabase.
-        result = query_vector_from_supabase(message, user_id)
-        retrieved_vector = result.get("vector", [])
-        Settings.embedding_context = retrieved_vector
+        # Fetch latest chat history
+        chat_history_response = get_chats()
+        latest_chats_data = chat_history_response.get_json()
+        latest_chats = latest_chats_data.get("chats", [])
+
+        # Format chat history for prompt
+        combined_history = "\n".join(
+            f"User: {chat['prompt']}\nAssistant: {chat['response']}"
+            for chat in latest_chats
+        )
+
+        # Ensure chat history doesn't exceed limit
+        if len(combined_history) > MAX_CHARACTERS:
+            combined_history = combined_history[-MAX_CHARACTERS:]
 
         llm_prompt = f"""
-        A custom embedding context has been loaded into your settings.
-        Considering the following conversation history:
+        You are StudyBuddy chatbot
+        Based on the following information from the document:
+        {relevant_content}
+        
+        And considering this conversation history:
         {combined_history}
         
         Current question: {message}
         
-        You are StudyBuddy chatbot Please respond in a warm, friendly manner as if you are chatting with a friend.
-        Your response should be concise, empathetic, and helpful.
+        Please respond in a warm, friendly manner as if you are chatting with a friend. Your response should:
+        - Address the question directly using relevant document information
+        - Use a conversational, natural tone
+        - Show empathy and understanding
+        - Include light acknowledgments of the user's question
+        - Avoid overly formal or technical language unless necessary
+        - Keep responses concise but complete
+        - Occasionally use gentle conversational elements 
+        - End with a friendly follow-up question when appropriate
+        
+        Balance being informative with being personable.
         """
         
-        llm = Groq(model=LLM_MODEL, api_key=GROQ_API_KEY)
+        llm = Groq(model="llama3-70b-8192", api_key=GROQ_API_KEY)
         response = llm.complete(llm_prompt)
         
         bot_message = response.text if hasattr(response, 'text') else str(response)
-        user_chat_histories[user_id].append((message, bot_message))
-        
+
+        # Add chat to Firestore
+        chat_data = {
+            "timestamp": firestore.SERVER_TIMESTAMP,
+            "user_id": user_id,
+            "prompt": message,
+            "response": bot_message
+        }
+
+        db.collection("chats").add(chat_data)
+
+        try:
+                chats_ref = db.collection("chats")
+                query = chats_ref.where("user_id", "==", user_id) \
+                                 .order_by("timestamp", direction=firestore.Query.DESCENDING)
+                results = query.get()
+
+                if len(results) > max_chats:
+                    # Get chats that need to be deleted (oldest ones)
+                    chats_to_delete = results[max_chats:]  # Keep only latest 10, delete the rest
+
+                    for chat in chats_to_delete:
+                        chat.reference.delete()  # Delete chat from Firestore
+
+                    print(f"Deleted {len(chats_to_delete)} old chats for user {user_id}")
+
+        except Exception as e:
+            print(f"Error enforcing chat limit: {str(e)}")
+
         return jsonify({"output": bot_message})
+    
     except Exception as e:
         app.logger.error(f"Error in chat endpoint: {str(e)}")
         return jsonify({"error": f"Failed to process chat: {str(e)}"}), 500
 
+
+# New route for saving quiz results
+
 @app.route('/save_quiz_results', methods=['POST'])
 def save_quiz_results():
-    """
-    Save quiz results to Supabase.
-    Expects a JSON payload: { "topic": "<topic>", "correctAnswers": <number>, "totalQuestions": <number>, "timeTaken": "<time>", "user_id": "<user-id>" }.
-    """
     data = request.get_json()
     required_fields = ["topic", "correctAnswers", "totalQuestions", "timeTaken", "user_id"]
     for field in required_fields:
@@ -303,15 +386,21 @@ def list_user_uploads():
     user_id = data["user_id"]
 
     try:
+        # Query the "file_metadata" table. Adjust these names as needed.
         result = supabase.table("file_metadata").select("*").eq("user_id", user_id).execute()
+
+        # Check if data was returned
         if result.data is None:
             raise Exception("No data returned from Supabase.")
+
+        uploads_data = result.data
         uploads = []
-        for item in result.data:
+        for item in uploads_data:
             uploads.append({
                 "name": item.get("file_name", "Unknown"),
                 "download_url": item.get("download_url", "")
             })
+
         return jsonify({"status": "success", "uploads": uploads}), 200
     except Exception as e:
         app.logger.error(f"Error listing user uploads: {str(e)}")
@@ -321,8 +410,11 @@ def list_user_uploads():
 def delete_user_uploads():
     """
     Delete an upload by its unique download_url.
+    - Uses the full download_url to locate the row in file_metadata.
+    - Extracts the relative file path from download_url to delete the file from Supabase Storage.
+    - Deletes the row in vectors where document_id equals download_url.
+    
     Expects a JSON payload: { "download_url": "<unique-download-url>" }.
-    Deletes the file from Supabase Storage, the corresponding metadata, and vector entry.
     """
     data = request.get_json()
     if not data or "download_url" not in data:
@@ -334,16 +426,20 @@ def delete_user_uploads():
         parts = download_url.split('/uploads/')
         if len(parts) < 2:
             raise Exception("Invalid download_url format.")
-        relative_path = parts[1]
+        relative_path = parts[1]  
 
+        # Delete the file from Supabase Storage (bucket "uploads")
         storage_res = supabase.storage.from_("uploads").remove([relative_path])
+
         if isinstance(storage_res, list) and storage_res and storage_res[0].get("error"):
             raise Exception(f"Storage error: {storage_res[0]['error']['message']}")
 
+        # Delete the row from file_metadata where download_url matches
         file_del_res = supabase.table("file_metadata").delete().eq("download_url", download_url).execute()
         if not file_del_res.data or len(file_del_res.data) == 0:
             return jsonify({"error": "No upload found with that download_url"}), 404
 
+        # Delete from vectors where document_id equals download_url
         vectors_del_res = supabase.table("vectors").delete().eq("document_id", download_url).execute()
 
         return jsonify({
@@ -354,6 +450,10 @@ def delete_user_uploads():
     except Exception as e:
         app.logger.error(f"Error deleting user upload: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+
+
+
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8000)

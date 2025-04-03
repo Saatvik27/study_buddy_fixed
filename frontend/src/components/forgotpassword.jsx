@@ -31,7 +31,7 @@ const ForgotPassword = () => {
   return (
     <div className="min-h-screen bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-4 text-white text-center">
+        <h2 className="text-2xl font-bold mb-4 text-[#EBEBEB]text-center">
           Reset Your Password
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -47,7 +47,7 @@ const ForgotPassword = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-gray-700 text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-gray-700 text-[#EBEBEB]px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="you@example.com"
             />
           </div>
@@ -67,7 +67,7 @@ const ForgotPassword = () => {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition ${
+            className={`w-full bg-blue-600 text-[#EBEBEB]py-2 rounded hover:bg-blue-700 transition ${
               loading ? 'opacity-50 cursor-not-allowed' : ''
             }`}
           >

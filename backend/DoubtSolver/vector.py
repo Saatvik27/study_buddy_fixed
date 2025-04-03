@@ -1,6 +1,7 @@
 import os
 import io
 import re
+import time
 import requests
 import fitz  # PyMuPDF
 import google.generativeai as genai
@@ -11,7 +12,6 @@ from llama_index.core.node_parser import SentenceSplitter
 from PIL import Image
 from supabase import create_client, Client
 from dotenv import load_dotenv
-import time
 
 load_dotenv()
 
@@ -37,6 +37,7 @@ class Settings:
 # Rate limiting constants (in seconds)
 RATE_LIMIT_DELAY = 1.0   # Delay after each successful call
 RETRY_DELAY = 5.0        # Delay when a 429 error is encountered
+MAX_CHAR_LENGTH = 20000  # Rough safety limit (adjust as needed)
 
 def process_image_with_rate_limiting(prompt, image_pil, gemini_model):
     """
@@ -99,13 +100,10 @@ def extract_pdf_content_from_bytes(pdf_bytes):
     
     return text, latex_expressions, image_descriptions
 
-def extract_latex_from_text(text):
-    """Extract LaTeX expressions using regex."""
-    return re.findall(r'\$([^$]+)\$', text)
 
 def store_vector(document_id: str, text_content: str, embedding: list, user_id: str):
     """
-    Insert a document's text and its embedding into the 'vectors' table in Supabase,
+    Insert a text chunk and its embedding into the 'vectors' table in Supabase,
     along with the user_id.
     """
     data = {
@@ -136,8 +134,8 @@ def check_user_vectors(user_id: str) -> bool:
 def create_vector_index_from_url(file_url: str, user_id: str):
     """
     Create a vector index from a PDF file at the given cloud URL.
-    The file is downloaded, processed entirely in memory, and its vector
-    representation is stored in Supabase under the specified user.
+    The file is downloaded, processed entirely in memory, then its content is chunked,
+    each chunk is embedded, and stored separately in Supabase under the specified user.
     """
     response = requests.get(file_url)
     if response.status_code != 200:
@@ -150,52 +148,78 @@ def create_vector_index_from_url(file_url: str, user_id: str):
     # Combine all extracted content into a single text representation
     full_content = text + "\n" + "\n".join(latex_expressions) + "\n" + "\n".join(image_descriptions)
     
-    # Create a Document object with the combined content and metadata
+    # Create a Document object for chunking
     document = Document(text=full_content, metadata={"source": file_url})
+    
+    # Setup the SentenceSplitter to chunk the document into pieces (e.g., 1024 characters per chunk with overlap)
+    parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
+    chunks = parser.get_nodes_from_documents([document])
     
     # Setup embedding model & LLM for generating the embedding
     embed_model = HuggingFaceEmbedding(model_name=MODEL_PATH)
     llm = Groq(model="llama3-70b-8192", api_key=GROQ_API_KEY)
     
-    # Use _embed() instead of embed() since embed() is not available.
-    embedding = embed_model._embed([document.text])[0]  # returns a list of floats
-    
-    # Store the vector in Supabase with the user_id
-    store_vector(document.metadata.get("source", "unknown"), document.text, embedding, user_id)
+    # Loop over each chunk, embed it, and store in Supabase
+    for chunk in chunks:
+        chunk_text = chunk.text.strip()
+        if not chunk_text:
+            continue
+        embedding = embed_model._embed([chunk_text])[0]  # returns a list of floats
+        store_vector(document.metadata.get("source", "unknown"), chunk_text, embedding, user_id)
     
     # Update Settings for any further processing if needed
     Settings.embed_model = embed_model
     Settings.llm = llm
-    Settings.node_parser = SentenceSplitter(chunk_size=1024, chunk_overlap=200)
+    Settings.node_parser = parser
     
-    print(f"Vector for document {file_url} stored in Supabase for user {user_id}.")
+    print(f"Stored {len(chunks)} chunks for document {file_url} in Supabase for user {user_id}.")
 
 def query_vector_from_supabase(prompt: str, user_id: str) -> dict:
     """
     Convert a prompt into an embedding, then query the Supabase 'vectors' table
-    for the most similar document(s) belonging to the given user using vector similarity search.
-    Returns the stored embedding vector.
+    for the most similar text chunks belonging to the given user using vector similarity search.
+    The top chunks are merged (while ensuring token limits) and returned.
     """
     # Generate an embedding for the prompt
     embed_model = HuggingFaceEmbedding(model_name=MODEL_PATH)
     prompt_embedding = embed_model._embed([prompt])[0]
     
-    # Build the SQL query using the pgvector similarity operator (<=>) and filter by user_id.
+    # Retrieve the top 5 matching chunks
     query = f"""
     SELECT * FROM vectors
     WHERE user_id = '{user_id}'
     ORDER BY embedding <=> ARRAY{prompt_embedding}::vector
-    LIMIT 1;
+    LIMIT 5;
     """
     response = supabase.rpc("run_sql", {"query": query}).execute()
     
     if hasattr(response, 'error') and response.error:
         print("Error querying vector:", response.error)
-        return {"vector": []}
+        return {"output": "Error retrieving data"}
     else:
-        if response.data and len(response.data) > 0:
-            result = response.data[0]
-            stored_embedding = result.get("embedding", [])
-            return {"vector": stored_embedding}
-        else:
-            return {"vector": []}
+        # Merge the retrieved chunks while keeping within a character limit (to respect Gemini's token limits)
+        merged_chunks = []
+        total_chars = 0
+        
+        for chunk in response.data:
+            text_chunk = chunk.get("text_content", "")
+            if total_chars + len(text_chunk) > MAX_CHAR_LENGTH:
+                break
+            merged_chunks.append(text_chunk)
+            total_chars += len(text_chunk)
+        
+        merged_text = "\n".join(merged_chunks)
+        return {"output": merged_text}
+
+# Example usage:
+if __name__ == "__main__":
+    user_id = "user_123"
+    file_url = "https://example.com/sample.pdf"  # Replace with your PDF URL
+
+    # Create vector index from PDF
+    create_vector_index_from_url(file_url, user_id)
+    
+    # Query vectors to get relevant text for a prompt
+    prompt = "Explain the key concepts of the document."
+    result = query_vector_from_supabase(prompt, user_id)
+    print("Query result:", result["output"])

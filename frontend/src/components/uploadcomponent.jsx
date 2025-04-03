@@ -111,9 +111,9 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
       const progressInterval = setInterval(() => {
         setVectorProgress((prev) => {
           if (prev >= 90) return prev;
-          return prev + 5;
+          return prev + Math.floor(Math.random() * 3) + 1;
         });
-      }, 200);
+      }, 400);
       
       // Send a request to create vectors on the backend.
       const response = await fetch("http://127.0.0.1:8000/generate_vectors", {
@@ -129,9 +129,6 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
       setVectorProgress(100);
       setIsGeneratingVectors(false);
       setUploadSuccess(true);
-      
-      // Alert the user that the upload was successful
-      alert("Upload Successful!");
 
       // Call the callback function if provided
       if (onUploadComplete) {
@@ -159,114 +156,206 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  // Determines if the file is a PDF
+  const isPDF = file && file.type === "application/pdf";
+
   return (
-    <div className={`bg-white rounded-lg shadow-sm p-4 ${className}`}>
-      <h2 className="text-lg font-semibold text-gray-800 mb-3">Upload Document</h2>
-      
-      {/* Drag and drop area */}
-      <div 
-        className={`border-2 border-dashed rounded-lg p-6 mb-3 flex flex-col items-center justify-center cursor-pointer transition-colors ${
-          dragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 hover:border-gray-400"
-        }`}
-        onDragEnter={handleDrag}
-        onDragLeave={handleDrag}
-        onDragOver={handleDrag}
-        onDrop={handleDrop}
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-        </svg>
-        <p className="text-sm text-gray-500 text-center mb-1">Drag & drop your file here or</p>
-        <label className="inline-block px-4 py-1.5 bg-blue-500 text-white text-sm font-medium rounded-md cursor-pointer hover:bg-blue-600 transition-colors">
-          Browse Files
-          <input
-            type="file"
-            onChange={handleFileChange}
-            className="hidden"
-            accept=".pdf"
-          />
-        </label>
-        <p className="text-xs text-gray-400 mt-2">Supported format: PDF</p>
-      </div>
-
-      {/* Selected file info */}
-      {file && !uploadSuccess && (
-        <div className="bg-gray-50 rounded-lg p-2 mb-3 flex items-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    <div className={`bg-white rounded-xl shadow-md overflow-hidden ${className}`}>
+      {/* Header section */}
+      <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-4 px-5">
+        <h2 className="text-xl font-bold text-white flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
           </svg>
-          <div className="ml-1 flex-1 truncate">
-            <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
-            <p className="text-xs text-gray-500">{formatFileSize(file.size)}</p>
+          Upload Document
+        </h2>
+      </div>
+      
+      <div className="p-5">
+        {/* Drag and drop area */}
+        <div 
+          className={`relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer transition-all ${
+            dragActive 
+              ? "border-[#1e88e5] bg-[#bbdefb]/30" 
+              : file 
+                ? "border-[#64b5f6] bg-[#e3f2fd]/50" 
+                : "border-gray-300 hover:border-[#64b5f6] hover:bg-[#f5f9ff]"
+          }`}
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+        >
+          {file ? (
+            // File selected view
+            <>
+              <div className="w-16 h-16 mb-3 bg-[#e3f2fd] rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-800 mb-1">{file.name}</h3>
+              <p className="text-sm text-gray-500 mb-1">{formatFileSize(file.size)}</p>
+              <div className="flex items-center text-[#1e88e5]">
+                <span className={`inline-block w-2 h-2 rounded-full mr-1.5 ${isPDF ? 'bg-green-500' : 'bg-yellow-500'}`}></span>
+                <span className="text-sm">{isPDF ? 'Ready to upload' : 'File might not be supported'}</span>
+              </div>
+              
+              {/* Remove file button */}
+              <button 
+                onClick={(e) => { e.stopPropagation(); setFile(null); }}
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 p-1 bg-white rounded-full shadow-sm"
+                title="Remove file"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </>
+          ) : (
+            // No file selected view
+            <>
+              <div className="w-16 h-16 mb-4 bg-[#e3f2fd] rounded-full flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-[#1e88e5]" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <p className="text-base text-gray-700 mb-2 font-medium">Drag & drop your document here</p>
+              <p className="text-sm text-gray-500 mb-4">or</p>
+              <label className="px-5 py-2.5 bg-[#1e88e5] text-white text-sm font-medium rounded-lg cursor-pointer hover:bg-[#1976d2] transition-colors shadow-sm hover:shadow-md">
+                Browse Files
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept=".pdf"
+                />
+              </label>
+              <div className="mt-4 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#1e88e5] mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-xs text-gray-500">Supported format: PDF</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Progress indicators */}
+        {(loading || isGeneratingVectors) && (
+          <div className="mt-5">
+            <div className="flex justify-between mb-1.5">
+              <span className="text-sm font-medium text-gray-700">
+                {loading ? "Uploading file..." : "Processing document..."}
+              </span>
+              <span className="text-sm text-gray-600">
+                {loading ? `${progress}%` : `${vectorProgress}%`}
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div 
+                className="h-2.5 rounded-full transition-all duration-300" 
+                style={{ 
+                  width: `${loading ? progress : vectorProgress}%`,
+                  background: "linear-gradient(135deg, #64b5f6, #1e88e5)"
+                }}
+              ></div>
+            </div>
+            
+            {isGeneratingVectors && (
+              <div className="mt-2 flex items-center text-sm text-gray-500">
+                <div className="animate-pulse mr-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <span>Creating AI vectors for your document...</span>
+              </div>
+            )}
           </div>
-          <button 
-            onClick={() => setFile(null)} 
-            className="text-gray-400 hover:text-gray-600 p-1"
-            title="Remove file"
+        )}
+
+        {/* Upload button */}
+        {!uploadSuccess && (
+          <button
+            onClick={handleUpload}
+            disabled={!file || loading || isGeneratingVectors || !isPDF}
+            className={`mt-4 w-full py-2.5 px-4 rounded-lg font-medium shadow-sm transition-all ${
+              !file || loading || isGeneratingVectors || !isPDF 
+                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                : 'bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white hover:shadow-md hover:-translate-y-0.5'
+            }`}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            {loading ? "Uploading..." : isGeneratingVectors ? "Processing..." : "Upload Document"}
           </button>
-        </div>
-      )}
+        )}
 
-      {/* Loader */}
-      {isGeneratingVectors && (
-        <div className="mb-3">
-          <div className="flex justify-between text-xs text-gray-600 mb-1">
-            <span>Loading ...</span>
-            <span>{vectorProgress}%</span>
+        {/* Success view */}
+        {uploadSuccess && downloadURL && (
+          <div className="mt-4 rounded-lg border border-[#bbdefb] bg-[#e3f2fd] p-4">
+            <div className="flex items-center mb-3">
+              <div className="mr-3 h-10 w-10 flex-shrink-0 rounded-full bg-[#1e88e5] flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-medium text-[#1e88e5]">Upload Successful!</h3>
+                <p className="text-sm text-gray-600">Your document is ready for use</p>
+              </div>
+            </div>
+            
+            <div className="mt-3 p-2 bg-white rounded-lg border border-gray-200">
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                </svg>
+                <input 
+                  type="text" 
+                  value={downloadURL} 
+                  readOnly 
+                  className="flex-1 text-sm text-gray-700 focus:outline-none bg-transparent truncate" 
+                />
+                <button 
+                  onClick={() => {
+                    navigator.clipboard.writeText(downloadURL);
+                    alert("Link copied to clipboard!");
+                  }}
+                  className="ml-1 p-1.5 text-[#1e88e5] hover:text-[#1976d2] hover:bg-gray-100 rounded-md transition-colors"
+                  title="Copy to clipboard"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
+                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-4">
+              <button
+                onClick={() => {
+                  setFile(null);
+                  setUploadSuccess(false);
+                  setDownloadURL("");
+                }}
+                className="w-full py-2 px-4 bg-[#1e88e5] text-white rounded-md font-medium transition-colors hover:bg-[#1976d2]"
+              >
+                Upload Another Document
+              </button>
+            </div>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-1.5">
-            <div 
-              className="bg-blue-500 h-1.5 rounded-full transition-all duration-300 ease-out" 
-              style={{ width: `${vectorProgress}%` }}
-            ></div>
-          </div>
-        </div>
-      )}
+        )}
 
-      {/* Upload button */}
-      <button
-        onClick={handleUpload}
-        disabled={!file || loading || isGeneratingVectors}
-        className={`w-full py-2 px-4 rounded-md text-white font-medium transition-colors ${
-          !file || loading || isGeneratingVectors ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-        }`}
-      >
-        {loading ? "Processing..." : "Upload File"}
-      </button>
-
-      {/* Download URL display */}
-      {uploadSuccess && downloadURL && (
-        <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-3">
-          <div className="flex items-center mb-1">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="text-green-700 text-sm font-medium">Upload Successful!</span>
+        {/* Information section */}
+        {!uploadSuccess && !loading && !isGeneratingVectors && (
+          <div className="mt-5 text-center">
+            <p className="text-sm text-gray-500">
+              Your documents are securely stored and only used to generate study materials for you.
+            </p>
           </div>
-          <p className="text-xs text-gray-700 mb-1">Your file is available at:</p>
-          <div className="bg-white p-1.5 rounded border border-gray-200 flex items-center">
-            <input 
-              type="text" 
-              value={downloadURL} 
-              readOnly 
-              className="flex-1 text-xs text-blue-600 focus:outline-none truncate bg-transparent" 
-            />
-            <button 
-              onClick={() => navigator.clipboard.writeText(downloadURL)}
-              className="ml-1 text-blue-500 hover:text-blue-700 p-1"
-              title="Copy to clipboard"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-              </svg>
-            </button>
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
