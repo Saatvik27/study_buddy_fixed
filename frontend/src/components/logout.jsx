@@ -2,7 +2,7 @@
 
 import React, { useContext } from 'react';
 import { UserContext } from '../contexts/usercontext';
-import { auth } from '../firebase/firebaseconfig';
+import { auth } from '../firebase/firebaseconfig.js';
 
 const LogoutButton = () => {
   const { setUser } = useContext(UserContext);

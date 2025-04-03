@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import Navbar from "./navbar";
+import Navbar from "./navbar.jsx";
 import emailjs from '@emailjs/browser';
 
 const Contact = () => {

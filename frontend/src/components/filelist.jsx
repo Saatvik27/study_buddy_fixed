@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { getAuth } from "firebase/auth";
-import { supabase } from "../supabase/supabaseClient";
+import { supabase } from "../supabase/supabaseclient.js";
 
 const FileList = () => {
   const [files, setFiles] = useState([]);

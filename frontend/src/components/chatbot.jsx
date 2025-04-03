@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import UploadComponent from "./UploadComponent";
-import Navbar from "./navbar";
-import NoDocumentsPrompt from "./nodocumentsprompt";
+import UploadComponent from "./uploadcomponent.jsx";
+import Navbar from "./navbar.jsx";
+import NoDocumentsPrompt from "./nodocumentsprompt.jsx";
 
 const ChatWithUpload = () => {
   const [hasVectors, setHasVectors] = useState(false);

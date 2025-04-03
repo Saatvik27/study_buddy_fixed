@@ -4,11 +4,10 @@
   "version": "0.0.0",
   "scripts": {
     "build:css": "npx tailwindcss -i ./frontend/src/input.css -o ./frontend/src/output.css --watch",
-    "dev": "concurrently \"npm run build:css\" \"vite\" \"node backend/server.js\"",
+    "dev": "concurrently \"npm run build:css\" \"vite\"",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview",
-    "server": "node backend/server.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@emailjs/browser": "^4.4.1",

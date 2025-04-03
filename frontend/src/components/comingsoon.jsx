@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import Navbar from "./navbar";
+import Navbar from "./navbar.jsx";
 
 const ComingSoon = () => {
   const navigate = useNavigate();

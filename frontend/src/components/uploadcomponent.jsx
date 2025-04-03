@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { getAuth } from "firebase/auth";
-import { supabase } from "../supabase/supabaseClient";
+import { supabase } from "../supabase/supabaseclient.js";
 
 const UploadComponent = ({ onUploadComplete, className = "" }) => {
   const [file, setFile] = useState(null);

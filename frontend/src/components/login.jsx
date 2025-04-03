@@ -6,7 +6,6 @@ import { auth, googleProvider} from '../firebase/firebaseconfig.js'; // Ensure c
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../contexts/usercontext.jsx';
 import { AuthModeContext } from '../contexts/authmodecontext.jsx'; // Import AuthModeContext
-import axios from 'axios';
 
 const Login = () => {
   // Consume AuthModeContext

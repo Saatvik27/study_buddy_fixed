@@ -2,9 +2,9 @@ import React, { useContext, useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { UserContext } from '../contexts/usercontext.jsx';
-import Navbar from './navbar';
-import ListUploads from './listuploads';
-import LogoutButton from './logout';
+import Navbar from './navbar.jsx';
+import ListUploads from './listuploads.jsx';
+import LogoutButton from './logout.jsx';
 
 const Profile = () => {
   const { user, setUser } = useContext(UserContext);

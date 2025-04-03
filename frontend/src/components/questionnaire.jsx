@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { useNavigate, Link } from 'react-router-dom';
-import Navbar from './navbar'; 
-import UploadComponent from './UploadComponent';
-import NoDocumentsPrompt from './nodocumentsprompt';
+import Navbar from './navbar.jsx'; 
+import UploadComponent from './uploadcomponent.jsx';
+import NoDocumentsPrompt from './nodocumentsprompt.jsx';
 
 const QuizState = {
   INITIAL: 'initial',
