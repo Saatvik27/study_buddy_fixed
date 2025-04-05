@@ -29,15 +29,24 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 bg-opacity-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-gray-800 p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-bold mb-4 text-[#EBEBEB]text-center">
+    <div className="flex items-center justify-center min-h-screen bg-gradient-to-b from-[#f5f9ff] to-[#bbdefb] bg-no-repeat relative overflow-hidden px-4 py-8">
+      {/* Background decorative elements */}
+      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#64b5f6]/10 rounded-full"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#1e88e5]/10 rounded-full"></div>
+      
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl p-8 z-10">
+        <h2 className="text-2xl font-bold text-[#1e88e5] mb-6 text-center">
           Reset Your Password
         </h2>
+        
+        <p className="mb-6 text-gray-600 text-center text-sm">
+          Enter your email address and we'll send you a link to reset your password.
+        </p>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Email Field */}
-          <div>
-            <label htmlFor="email" className="block text-gray-300 mb-1">
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-gray-700 text-xs font-medium mb-1">
               Email Address
             </label>
             <input
@@ -47,28 +56,29 @@ const ForgotPassword = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full bg-gray-700 text-[#EBEBEB]px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-2 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 transition-all focus:outline-none focus:ring-1 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
               placeholder="you@example.com"
+              autoComplete="email"
             />
           </div>
 
           {/* Status Message */}
           {status && (
-            <p
-              className={`text-center ${
-                status.includes('sent') ? 'text-green-500' : 'text-red-500'
-              }`}
-            >
-              {status}
-            </p>
+            <div className={`p-3 rounded-lg text-sm ${
+              status.includes('sent') ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
+            }`}>
+              <p className="text-center">
+                {status}
+              </p>
+            </div>
           )}
 
           {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-blue-600 text-[#EBEBEB]py-2 rounded hover:bg-blue-700 transition ${
-              loading ? 'opacity-50 cursor-not-allowed' : ''
+            className={`w-full p-2 mt-2 bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300 ${
+              loading ? 'opacity-70 cursor-not-allowed' : 'hover:-translate-y-0.5'
             }`}
           >
             {loading ? 'Sending...' : 'Send Password Reset Email'}
@@ -76,16 +86,17 @@ const ForgotPassword = () => {
         </form>
 
         {/* Link to Login */}
-        <p className="mt-4 text-center text-gray-400">
-          Remembered your password?{' '}
+        <div className="mt-6 pt-4 text-center border-t border-gray-200">
+          <p className="text-gray-600 mb-2">
+            Remembered your password?
+          </p>
           <Link
             to="/login"
-            onClick={toggleAuthMode}
-            className="text-blue-400 hover:underline"
+            className="px-4 py-2 bg-[#1e88e5]/10 text-[#1e88e5] rounded-full font-medium transition-colors duration-300 hover:bg-[#1e88e5]/20 inline-block"
           >
-            Login here
+            Back to Sign In
           </Link>
-        </p>
+        </div>
       </div>
     </div>
   );

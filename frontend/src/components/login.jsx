@@ -2,19 +2,22 @@
 
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from 'react-router-dom';
-import { auth, googleProvider} from '../firebase/firebaseconfig.js'; // Ensure correct path
+import { auth, googleProvider} from '../firebase/firebaseconfig.js';
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../contexts/usercontext.jsx';
-import { AuthModeContext } from '../contexts/authmodecontext.jsx'; // Import AuthModeContext
+import { AuthModeContext } from '../contexts/authmodecontext.jsx';
 
 const Login = () => {
   // Consume AuthModeContext
   const { isSignUpMode, toggleAuthMode } = useContext(AuthModeContext);
+  
+  // Local state for mobile mode only - separate from desktop
+  const [mobileIsSignUp, setMobileIsSignUp] = useState(false);
 
   // Password visibility states
   const [showSignInPassword, setShowSignInPassword] = useState(false);
   const [showSignUpPassword, setShowSignUpPassword] = useState(false);
-  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(true);
+  const [showSignUpConfirmPassword, setShowSignUpConfirmPassword] = useState(false);
 
   // State for Sign In form
   const [signInData, setSignInData] = useState({
@@ -37,7 +40,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);
 
-  // Toggle between Sign In and Sign Up modes using context
+  // Toggle between Sign In and Sign Up modes using context (for desktop)
   const handleToggleMode = () => {
     toggleAuthMode(); // Toggle mode via context
     // Reset form data and errors when toggling
@@ -50,23 +53,45 @@ const Login = () => {
     setShowSignUpPassword(false);
     setShowSignUpConfirmPassword(false);
   };
-
-  // Handler for Sign In input changes
-  const handleSignInChange = (e) => {
-    const { name, value } = e.target;
-    setSignInData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+  
+  // Toggle for mobile view (separate from desktop context)
+  const handleMobileToggle = () => {
+    console.log("Mobile toggle clicked, current state:", mobileIsSignUp);
+    setMobileIsSignUp(prev => !prev);
+    // Reset form data and errors when toggling
+    setSignInData({ email: '', password: '' });
+    setSignInErrors({});
+    setSignUpData({ name: '', email: '', password: '', confirmPassword: '' });
+    setSignUpErrors({});
+    // Reset password visibility
+    setShowSignInPassword(false);
+    setShowSignUpPassword(false);
+    setShowSignUpConfirmPassword(false);
   };
 
-  // Handler for Sign Up input changes
-  const handleSignUpChange = (e) => {
-    const { name, value } = e.target;
-    setSignUpData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+  // Direct change handlers for input fields (simplifies event handling)
+  const updateSignInEmail = (e) => {
+    setSignInData({...signInData, email: e.target.value});
+  };
+
+  const updateSignInPassword = (e) => {
+    setSignInData({...signInData, password: e.target.value});
+  };
+
+  const updateSignUpName = (e) => {
+    setSignUpData({...signUpData, name: e.target.value});
+  };
+
+  const updateSignUpEmail = (e) => {
+    setSignUpData({...signUpData, email: e.target.value});
+  };
+
+  const updateSignUpPassword = (e) => {
+    setSignUpData({...signUpData, password: e.target.value});
+  };
+
+  const updateSignUpConfirmPassword = (e) => {
+    setSignUpData({...signUpData, confirmPassword: e.target.value});
   };
 
   // Validation for Sign In form
@@ -95,7 +120,7 @@ const Login = () => {
     const errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (!signUpData.name.trim()) {
+    if (!signUpData.name || !signUpData.name.trim()) {
       errors.name = "Name is required.";
     }
 
@@ -164,6 +189,11 @@ const Login = () => {
     }
   };
 
+  // Handler for navigating to forgot password screen
+  const handleForgotPassword = () => {
+    navigate('/forgotpassword');
+  };
+
   // Handler for Google Sign-In
   const handleGoogleSignIn = async () => {
     try {
@@ -212,7 +242,250 @@ const Login = () => {
       <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-[#64b5f6]/10 rounded-full"></div>
       <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-[#1e88e5]/10 rounded-full"></div>
 
-      <div className="relative w-full max-w-[800px] h-auto md:h-[550px] bg-white shadow-2xl rounded-2xl overflow-hidden z-10">
+      {/* Mobile Layout - Only visible on small screens */}
+      <div className="md:hidden w-full max-w-md z-20">
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="p-6">
+            <h2 className="text-2xl font-bold text-[#1e88e5] mb-4 text-center">
+              {mobileIsSignUp ? "Create Account" : "Welcome Back"}
+            </h2>
+            
+            <div className="flex justify-center w-full mb-4">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                className="flex items-center justify-center w-full max-w-[320px] px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-all shadow-sm"
+              >
+                <GoogleIcon />
+                <span className="ml-2">Continue with Google</span>
+              </button>
+            </div>
+            
+            <div className="flex items-center my-4 w-full">
+              <div className="flex-grow h-[1px] bg-gray-300"></div>
+              <p className="mx-2 text-gray-500 text-sm">
+                {mobileIsSignUp ? "or sign up with email" : "or sign in with email"}
+              </p>
+              <div className="flex-grow h-[1px] bg-gray-300"></div>
+            </div>
+            
+            {/* Mobile sign in form */}
+            {!mobileIsSignUp && (
+              <form className="w-full" onSubmit={handleSignInSubmit}>
+                <div className="mb-3">
+                  <label className="block text-gray-700 text-xs font-medium mb-1" htmlFor="mobile-sign-in-email">
+                    Email Address
+                  </label>
+                  <input
+                    id="mobile-sign-in-email"
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    className={`w-full p-2 text-sm border rounded-lg bg-white text-gray-700 transition-all focus:outline-none focus:ring-1 ${
+                      signInErrors.email ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
+                    }`}
+                    value={signInData.email}
+                    onChange={updateSignInEmail}
+                    autoComplete="email"
+                    required
+                  />
+                  {signInErrors.email && (
+                    <p className="text-red-500 text-xs mt-1">{signInErrors.email}</p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="block text-gray-700 text-xs font-medium" htmlFor="mobile-sign-in-password">
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-xs font-medium text-[#1e88e5] hover:text-[#64b5f6] transition-colors"
+                    >
+                      Forgot password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      id="mobile-sign-in-password"
+                      type={showSignInPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="••••••••"
+                      className={`w-full p-2 pr-10 text-sm border rounded-lg bg-white text-gray-700 transition-all focus:outline-none focus:ring-1 ${
+                        signInErrors.password ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
+                      }`}
+                      value={signInData.password}
+                      onChange={updateSignInPassword}
+                      autoComplete="current-password"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowSignInPassword(!showSignInPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      {showSignInPassword ? (
+                        <EyeOffIcon className="h-4 w-4" />
+                      ) : (
+                        <EyeIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {signInErrors.password && (
+                    <p className="text-red-500 text-xs mt-1">{signInErrors.password}</p>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="w-full p-2 bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300"
+                >
+                  Sign In
+                </button>
+              </form>
+            )}
+            
+            {/* Mobile sign up form */}
+            {mobileIsSignUp && (
+              <form className="w-full" onSubmit={handleSignUpSubmit}>
+                <div className="mb-2">
+                  <label className="block text-gray-700 text-xs font-medium mb-1" htmlFor="mobile-sign-up-name">
+                    Full Name
+                  </label>
+                  <input
+                    id="mobile-sign-up-name"
+                    type="text"
+                    name="name"
+                    placeholder="John Doe"
+                    className={`w-full p-2 text-sm border rounded-lg bg-white text-gray-700 transition-all focus:outline-none focus:ring-1 ${
+                      signUpErrors.name ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
+                    }`}
+                    value={signUpData.name}
+                    onChange={updateSignUpName}
+                    autoComplete="name"
+                    required
+                  />
+                  {signUpErrors.name && (
+                    <p className="text-red-500 text-xs mt-1">{signUpErrors.name}</p>
+                  )}
+                </div>
+                <div className="mb-2">
+                  <label className="block text-gray-700 text-xs font-medium mb-1" htmlFor="mobile-sign-up-email">
+                    Email Address
+                  </label>
+                  <input
+                    id="mobile-sign-up-email"
+                    type="email"
+                    name="email"
+                    placeholder="you@example.com"
+                    className={`w-full p-2 text-sm border rounded-lg bg-white text-gray-700 transition-all focus:outline-none focus:ring-1 ${
+                      signUpErrors.email ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
+                    }`}
+                    value={signUpData.email}
+                    onChange={updateSignUpEmail}
+                    autoComplete="email"
+                    required
+                  />
+                  {signUpErrors.email && (
+                    <p className="text-red-500 text-xs mt-1">{signUpErrors.email}</p>
+                  )}
+                </div>
+                <div className="mb-2">
+                  <label className="block text-gray-700 text-xs font-medium mb-1" htmlFor="mobile-sign-up-password">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="mobile-sign-up-password"
+                      type={showSignUpPassword ? "text" : "password"}
+                      name="password"
+                      placeholder="••••••••"
+                      className={`w-full p-2 pr-10 text-sm border rounded-lg bg-white text-gray-700 transition-all focus:outline-none focus:ring-1 ${
+                        signUpErrors.password ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
+                      }`}
+                      value={signUpData.password}
+                      onChange={updateSignUpPassword}
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      {showSignUpPassword ? (
+                        <EyeOffIcon className="h-4 w-4" />
+                      ) : (
+                        <EyeIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {signUpErrors.password && (
+                    <p className="text-red-500 text-xs mt-1">{signUpErrors.password}</p>
+                  )}
+                </div>
+                <div className="mb-4">
+                  <label className="block text-gray-700 text-xs font-medium mb-1" htmlFor="mobile-sign-up-confirm-password">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="mobile-sign-up-confirm-password"
+                      type={showSignUpConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      placeholder="••••••••"
+                      className={`w-full p-2 pr-10 text-sm border rounded-lg bg-white text-gray-700 transition-all focus:outline-none focus:ring-1 ${
+                        signUpErrors.confirmPassword ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
+                      }`}
+                      value={signUpData.confirmPassword}
+                      onChange={updateSignUpConfirmPassword}
+                      autoComplete="new-password"
+                      required
+                    />
+                    <button 
+                      type="button" 
+                      onClick={() => setShowSignUpConfirmPassword(!showSignUpConfirmPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      {showSignUpConfirmPassword ? (
+                        <EyeOffIcon className="h-4 w-4" />
+                      ) : (
+                        <EyeIcon className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
+                  {signUpErrors.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">{signUpErrors.confirmPassword}</p>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="w-full p-2 bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300"
+                >
+                  Create Account
+                </button>
+              </form>
+            )}
+            
+            {/* Mobile toggle section */}
+            <div className="mt-6 pt-6 text-center border-t border-gray-200">
+              <p className="text-gray-600 mb-2">
+                {mobileIsSignUp ? "Already have an account?" : "New here?"}
+              </p>
+              <button
+                type="button"
+                onClick={handleMobileToggle}
+                className="px-4 py-2 bg-[#1e88e5]/10 text-[#1e88e5] rounded-full font-medium transition-colors duration-300 hover:bg-[#1e88e5]/20"
+              >
+                {mobileIsSignUp ? "Sign In" : "Sign Up"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop Layout - Only visible on medium screens and up */}
+      <div className="hidden md:block relative w-full max-w-[800px] h-auto md:h-[550px] bg-white shadow-2xl rounded-2xl overflow-hidden z-10">
         {/* Main container with fixed positioning */}
         <div className="relative w-full h-full">
           {/* Sign In Form - Always positioned at left side */}
@@ -257,7 +530,8 @@ const Login = () => {
                       signInErrors.email ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
                     }`}
                     value={signInData.email}
-                    onChange={handleSignInChange}
+                    onChange={updateSignInEmail}
+                    autoComplete="email"
                     required
                   />
                   {signInErrors.email && (
@@ -269,12 +543,13 @@ const Login = () => {
                     <label className="block text-gray-700 text-xs font-medium" htmlFor="sign-in-password">
                       Password
                     </label>
-                    <Link
-                      to="/forgotpassword"
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
                       className="text-xs font-medium text-[#1e88e5] hover:text-[#64b5f6] transition-colors"
                     >
                       Forgot password?
-                    </Link>
+                    </button>
                   </div>
                   <div className="relative">
                     <input
@@ -286,7 +561,8 @@ const Login = () => {
                         signInErrors.password ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
                       }`}
                       value={signInData.password}
-                      onChange={handleSignInChange}
+                      onChange={updateSignInPassword}
+                      autoComplete="current-password"
                       required
                     />
                     <button 
@@ -357,7 +633,8 @@ const Login = () => {
                       signUpErrors.name ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
                     }`}
                     value={signUpData.name}
-                    onChange={handleSignUpChange}
+                    onChange={updateSignUpName}
+                    autoComplete="name"
                     required
                   />
                   {signUpErrors.name && (
@@ -377,7 +654,8 @@ const Login = () => {
                       signUpErrors.email ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
                     }`}
                     value={signUpData.email}
-                    onChange={handleSignUpChange}
+                    onChange={updateSignUpEmail}
+                    autoComplete="email"
                     required
                   />
                   {signUpErrors.email && (
@@ -398,7 +676,8 @@ const Login = () => {
                         signUpErrors.password ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
                       }`}
                       value={signUpData.password}
-                      onChange={handleSignUpChange}
+                      onChange={updateSignUpPassword}
+                      autoComplete="new-password"
                       required
                     />
                     <button 
@@ -431,7 +710,8 @@ const Login = () => {
                         signUpErrors.confirmPassword ? "border-red-500 focus:ring-red-200" : "border-gray-300 focus:ring-[#64b5f6]/50 focus:border-[#1e88e5]"
                       }`}
                       value={signUpData.confirmPassword}
-                      onChange={handleSignUpChange}
+                      onChange={updateSignUpConfirmPassword}
+                      autoComplete="new-password"
                       required
                     />
                     <button 
@@ -476,6 +756,7 @@ const Login = () => {
                     : "Sign up and discover a new way to learn with AI."}
                 </p>
                 <button
+                  type="button"
                   onClick={handleToggleMode}
                   className="px-4 py-2 bg-transparent border-2 border-white rounded-full hover:bg-white/10 transition-colors duration-300 font-medium text-white text-sm"
                 >
