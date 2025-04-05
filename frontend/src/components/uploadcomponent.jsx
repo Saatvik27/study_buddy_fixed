@@ -111,7 +111,7 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
       setVectorProgress(0);
       const progressInterval = setInterval(() => {
         setVectorProgress((prev) => {
-          if (prev >= 90) return prev;
+          if (prev >= 99) return prev;
           return prev + Math.floor(Math.random() * 3) + 1;
         });
       }, 400);
