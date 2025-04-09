@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import Navbar from "./navbar.jsx";
-import emailjs from '@emailjs/browser';
+import { sendForm } from '@emailjs/browser';
 
 const Contact = () => {
   const form = useRef();
@@ -28,18 +28,19 @@ const Contact = () => {
     
     try {
       // EmailJS configuration
-      // You'll need to sign up for EmailJS and get your own service ID, template ID, and public key
-      const serviceId = 'YOUR_SERVICE_ID'; // Replace with your service ID
-      const templateId = 'YOUR_TEMPLATE_ID'; // Replace with your template ID
-      const publicKey = 'YOUR_PUBLIC_KEY'; // Replace with your public key
+      const serviceId = 'service_luv69d';
+      const templateId = 'template_nyeqc1p';
+      const publicKey = 'h1pbIPSCGT6J9gWuR';
       
-      // Send email using EmailJS
-      await emailjs.sendForm(
+      // Using the sendForm function directly with the latest API
+      const result = await sendForm(
         serviceId,
         templateId,
         form.current,
         publicKey
       );
+      
+      console.log('Email sent successfully:', result.text);
       
       // Success handling
       setStatus("success");
