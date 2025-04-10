@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "./navbar.jsx";
 import { UserContext } from "../contexts/usercontext";
+import FooterComponent from "./footercomponent.jsx";
 
 // SVG icons as components
 const BrainIcon = () => (
@@ -426,69 +427,8 @@ const Home = () => {
 
       {/* Footer */}
       <footer className="bg-white text-gray-600 py-16" id="contact">
-      <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-  <div className="grid grid-cols-1 md:grid-cols-12 gap-10 mb-10">
-    {/* Column 1 - Logo and Social Icons (spans 5 columns) */}
-    <div className="md:col-span-5">
-      <div className="text-2xl font-bold text-[#1e88e5] mb-4">
-        StudyBuddy
-      </div>
-      <p className="mb-6">
-        Helping everyone master any subject with AI-powered study tools that make learning more efficient and enjoyable.
-      </p>
-    </div>
-    
-    {/* Column 2 - Quick Links (spans 3 columns) */}
-    <div className="md:col-span-3 md:col-start-7">
-      <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Links</h3>
-      <ul className="space-y-2">
-        <li><a href="#" className="hover:text-[#1e88e5] transition-colors">Home</a></li>
-        <li><a href="#features" className="hover:text-[#1e88e5] transition-colors">Features</a></li>
-        <li><a href="#how-it-works" className="hover:text-[#1e88e5] transition-colors">How It Works</a></li>
-        <li><a href="#use-cases" className="hover:text-[#1e88e5] transition-colors">Use Cases</a></li>
-      </ul>
-    </div>
-    
-    {/* Column 3 - Contact (spans 3 columns) */}
-    <div className="md:col-span-3 md:col-start-10">
-  <h3 className="text-lg font-semibold text-gray-800 mb-4">Contact Us</h3>
-  <ul className="space-y-3">
-    <li className="flex items-center">
-      <span className="mr-3 text-[#1e88e5]">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-      </span> 
-      hello@studybuddy.app
-    </li>
-    <li className="flex items-center">
-      <span className="mr-3 text-[#1e88e5]">
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-        </svg>
-      </span> 
-      + 91 9999999999
-    </li>
-    <li className="mt-5 pt-3">
-      <Link 
-        to="/contact"
-        className="inline-flex items-center px-4 py-2 rounded-lg border border-[#1e88e5] text-[#1e88e5] hover:bg-[#e3f2fd] transition-colors"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-        Quick Contact Form
-      </Link>
-    </li>
-  </ul>
-</div>
-  </div>
-
-          
-          {/* Copyright */}
-          <div className="pt-6 border-t border-gray-200 text-center">
-            <p>&copy; {new Date().getFullYear()} StudyBuddy. All rights reserved.</p>
-          </div>
+        <div className="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <FooterComponent />
         </div>
       </footer>
     </div>
