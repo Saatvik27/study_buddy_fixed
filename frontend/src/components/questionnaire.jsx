@@ -244,10 +244,10 @@ const Questionnaire = () => {
   // Custom NoDocumentsPrompt wrapper to ensure consistent styling
   const renderNoVectorsPrompt = () => (
     <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-6 px-8 text-center">
-        <h2 className="text-2xl md:text-3xl font-bold text-white">StudyBuddy Quiz</h2>
+      <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-5 md:py-6 px-6 md:px-8 text-center">
+        <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">StudyBuddy Quiz</h2>
       </div>
-      <div className="p-8">
+      <div className="p-5 md:p-8">
         <NoDocumentsPrompt
           featureName="quiz"
           onUploadClick={() => setIsUploading(true)}
@@ -275,14 +275,14 @@ const Questionnaire = () => {
     
     return (
       <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-6 px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white">Quiz Completed!</h2>
-          <p className="text-white/80 mt-2">Topic: {topic}</p>
+        <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-5 md:py-6 px-6 md:px-8 text-center">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">Quiz Completed!</h2>
+          <p className="text-white/80 mt-2 text-sm md:text-base">Topic: {topic}</p>
         </div>
         
-        <div className="p-8">
-          <div className="flex justify-center mb-6">
-            <div className="relative w-40 h-40 rounded-full flex items-center justify-center bg-gray-100">
+        <div className="p-4 md:p-8">
+          <div className="flex justify-center mb-4 md:mb-6">
+            <div className="relative w-28 h-28 md:w-40 md:h-40 rounded-full flex items-center justify-center bg-gray-100">
               <div className="absolute inset-0">
                 <svg className="w-full h-full" viewBox="0 0 100 100">
                   <circle 
@@ -308,26 +308,26 @@ const Questionnaire = () => {
                 </svg>
               </div>
               <div className="flex flex-col items-center justify-center">
-                <span className="text-3xl font-bold text-gray-800">{score}</span>
-                <span className="text-gray-500">out of {questions.length}</span>
+                <span className="text-xl md:text-3xl font-bold text-gray-800">{score}</span>
+                <span className="text-xs md:text-sm text-gray-500">out of {questions.length}</span>
               </div>
             </div>
           </div>
           
-          <h3 className={`text-center text-xl font-semibold mb-4 ${resultClass}`}>
+          <h3 className={`text-center text-base md:text-xl font-semibold mb-4 ${resultClass}`}>
             {resultMessage}
           </h3>
           
-          <div className="flex flex-col sm:flex-row gap-3 mt-8 justify-center">
+          <div className="flex flex-col gap-3 mt-5 md:mt-8 justify-center">
             <button 
               onClick={handleRetry}
-              className="py-3 px-6 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md"
+              className="w-full py-2.5 md:py-3 px-5 md:px-6 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md text-sm md:text-base"
             >
               Take Another Quiz
             </button>
             <Link
               to="/dashboard"
-              className="py-3 px-6 rounded-lg border border-[#1e88e5] text-[#1e88e5] font-medium transition-all hover:bg-[#1e88e5]/5 text-center"
+              className="w-full py-2.5 md:py-3 px-5 md:px-6 rounded-lg border border-[#1e88e5] text-[#1e88e5] font-medium transition-all hover:bg-[#1e88e5]/5 text-center text-sm md:text-base"
             >
               Back to Dashboard
             </Link>
@@ -343,28 +343,28 @@ const Questionnaire = () => {
     }
     return (
       <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
-        <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-6 px-8 text-center">
-          <h2 className="text-2xl md:text-3xl font-bold text-white">StudyBuddy Quiz</h2>
-          <p className="text-white/80 mt-2">Test your knowledge on any subject</p>
+        <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-5 md:py-6 px-6 md:px-8 text-center">
+          <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">StudyBuddy Quiz</h2>
+          <p className="text-white/80 mt-2 text-sm md:text-base">Test your knowledge on any subject</p>
         </div>
         
-        <div className="p-8">
-          <div className="mb-8">
-            <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-[#bbdefb] flex items-center justify-center shadow-md">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="p-5 md:p-8">
+          <div className="mb-6 md:mb-8">
+            <div className="flex justify-center mb-5 md:mb-6">
+              <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-[#bbdefb] flex items-center justify-center shadow-md">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 md:h-10 md:w-10 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
             
-            <p className="text-gray-600 text-center max-w-md mx-auto">
+            <p className="text-gray-600 text-center max-w-md mx-auto text-sm md:text-base">
               We'll generate quiz questions based on your uploaded documents.
               Enter a specific topic to focus your quiz.
             </p>
           </div>
 
-          <div className="mb-8">
+          <div className="mb-5 md:mb-6">
             <label htmlFor="topic" className="block text-sm font-medium text-gray-700 mb-2">
               Quiz Topic
             </label>
@@ -374,18 +374,18 @@ const Questionnaire = () => {
               value={topic}
               onChange={(e) => setTopic(e.target.value)}
               placeholder="e.g. Neural Networks, World War II, Climate Change"
-              className="px-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-[#64b5f6] focus:border-[#1e88e5] focus:outline-none transition-colors text-gray-700"
+              className="px-3 md:px-4 py-2.5 md:py-3 w-full border border-gray-300 rounded-lg focus:ring-[#64b5f6] focus:border-[#1e88e5] focus:outline-none transition-colors text-gray-700 text-sm md:text-base"
             />
           </div>
           
-          <div className="mb-8 bg-[#e3f2fd] p-4 rounded-lg border-l-4 border-[#1e88e5]">
-            <h3 className="font-semibold text-gray-800 mb-2 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="mb-6 md:mb-8 bg-[#e3f2fd] p-3 md:p-4 rounded-lg border-l-4 border-[#1e88e5]">
+            <h3 className="font-semibold text-gray-800 mb-2 flex items-center text-sm md:text-base">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-2 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               Quiz Instructions:
             </h3>
-            <ul className="text-sm text-gray-600 space-y-1 pl-5 list-disc">
+            <ul className="text-xs md:text-sm text-gray-600 space-y-1 pl-5 list-disc">
               <li>Each quiz contains 15 questions</li>
               <li>Select your answer and click Submit</li>
               <li>You'll see explanations for each answer</li>
@@ -397,13 +397,13 @@ const Questionnaire = () => {
             <button 
               onClick={handleStart} 
               disabled={!topic}
-              className="py-3 px-6 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed flex-1"
+              className="py-2.5 md:py-3 px-4 md:px-6 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed flex-1 text-sm md:text-base"
             >
               Start Quiz
             </button>
             <button 
               onClick={() => setIsUploading(true)}
-              className="py-3 px-6 rounded-lg border border-[#1e88e5] text-[#1e88e5] font-medium transition-all hover:bg-[#1e88e5]/5 flex-1"
+              className="py-2.5 md:py-3 px-4 md:px-6 rounded-lg border border-[#1e88e5] text-[#1e88e5] font-medium transition-all hover:bg-[#1e88e5]/5 flex-1 text-sm md:text-base"
             >
               Upload New Document
             </button>
@@ -415,30 +415,30 @@ const Questionnaire = () => {
 
   const renderQuestion = () => (
     <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-4 px-6">
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold text-white">
+      <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-3 md:py-4 px-4 md:px-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+          <h2 className="text-lg md:text-xl font-bold text-white mb-1 sm:mb-0">
             Question {currentIndex + 1}/{questions.length}
           </h2>
-          <span className="text-white/80">Topic: {topic}</span>
+          <span className="text-white/80 text-xs md:text-sm">Topic: {topic}</span>
         </div>
-        <div className="w-full bg-white/30 rounded-full h-2 mt-3">
+        <div className="w-full bg-white/30 rounded-full h-1.5 md:h-2 mt-3">
           <div 
-            className="bg-white h-2 rounded-full transition-all duration-300"
+            className="bg-white h-1.5 md:h-2 rounded-full transition-all duration-300"
             style={{ width: `${progress}%` }}
           ></div>
         </div>
       </div>
       
-      <div className="p-6">
-        <h3 className="text-lg font-medium text-gray-800 mb-6">{currentQuestion.question}</h3>
+      <div className="p-4 md:p-6">
+        <h3 className="text-base md:text-lg font-medium text-gray-800 mb-4 md:mb-6">{currentQuestion.question}</h3>
         
-        <div className="space-y-3 mb-6">
+        <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
           {currentQuestion.options.map((option, idx) => (
             <div 
               key={idx}
               onClick={() => quizState !== QuizState.SUBMITTED && handleAnswer(option)}
-              className={`p-3 border rounded-lg cursor-pointer transition-all ${
+              className={`p-2.5 md:p-3 border rounded-lg cursor-pointer transition-all ${
                 quizState === QuizState.SUBMITTED
                   ? answers[currentIndex]?.selected === option
                     ? answers[currentIndex]?.isCorrect 
@@ -453,7 +453,7 @@ const Questionnaire = () => {
               }`}
             >
               <div className="flex items-center">
-                <div className={`w-6 h-6 flex-shrink-0 rounded-full mr-3 flex items-center justify-center ${
+                <div className={`w-5 h-5 md:w-6 md:h-6 flex-shrink-0 rounded-full mr-2 md:mr-3 flex items-center justify-center ${
                   quizState === QuizState.SUBMITTED
                     ? answers[currentIndex]?.selected === option
                       ? answers[currentIndex]?.isCorrect
@@ -469,16 +469,16 @@ const Questionnaire = () => {
                   {quizState === QuizState.SUBMITTED ? (
                     answers[currentIndex]?.selected === option ? (
                       answers[currentIndex]?.isCorrect ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
                       ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                       )
                     ) : option === currentQuestion.answer ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 md:h-4 md:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     ) : (
@@ -488,7 +488,7 @@ const Questionnaire = () => {
                     <span className="text-xs">{String.fromCharCode(65 + idx)}</span>
                   )}
                 </div>
-                <span className={`${
+                <span className={`text-sm md:text-base ${
                   quizState === QuizState.SUBMITTED && 
                   (answers[currentIndex]?.selected === option || option === currentQuestion.answer) 
                     ? 'font-medium' 
@@ -502,17 +502,17 @@ const Questionnaire = () => {
         </div>
         
         {quizState === QuizState.SUBMITTED && (
-          <div className={`p-4 rounded-lg mb-6 ${
+          <div className={`p-3 md:p-4 rounded-lg mb-4 md:mb-6 ${
             answers[currentIndex].isCorrect 
               ? 'bg-green-50 border border-green-200' 
               : 'bg-red-50 border border-red-200'
           }`}>
-            <h4 className={`font-semibold ${
+            <h4 className={`font-semibold text-sm md:text-base ${
               answers[currentIndex].isCorrect ? 'text-green-800' : 'text-red-800'
             } mb-1`}>
               {answers[currentIndex].isCorrect ? 'Correct!' : 'Incorrect'}
             </h4>
-            <p className="text-gray-700">{currentQuestion.explanation}</p>
+            <p className="text-xs md:text-sm text-gray-700">{currentQuestion.explanation}</p>
           </div>
         )}
         
@@ -520,14 +520,14 @@ const Questionnaire = () => {
           <button
             onClick={handleSubmitAnswer}
             disabled={tempAnswer === null}
-            className="w-full py-3 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="w-full py-2.5 md:py-3 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md disabled:bg-gray-300 disabled:cursor-not-allowed text-sm md:text-base"
           >
             Submit Answer
           </button>
         ) : (
           <button 
             onClick={handleNext}
-            className="w-full py-3 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md"
+            className="w-full py-2.5 md:py-3 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md text-sm md:text-base"
           >
             {isLastQuestion ? 'Finish Quiz' : 'Next Question'}
           </button>
@@ -538,52 +538,52 @@ const Questionnaire = () => {
 
   const renderLoading = () => (
     <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-6 px-8 text-center">
-        <h2 className="text-2xl font-bold text-white">Generating Quiz</h2>
-        <p className="text-white/80 mt-2">Topic: {topic}</p>
+      <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-5 md:py-6 px-6 md:px-8 text-center">
+        <h2 className="text-xl md:text-2xl font-bold text-white">Generating Quiz</h2>
+        <p className="text-white/80 mt-2 text-sm md:text-base">Topic: {topic}</p>
       </div>
       
-      <div className="p-8 flex flex-col items-center justify-center">
-        <div className="flex justify-center mb-6">
-          <svg className="animate-spin h-12 w-12 text-[#1e88e5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <div className="p-6 md:p-8 flex flex-col items-center justify-center">
+        <div className="flex justify-center mb-5 md:mb-6">
+          <svg className="animate-spin h-10 w-10 md:h-12 md:w-12 text-[#1e88e5]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
         </div>
-        <p className="text-gray-600 text-center mb-2">Creating challenging questions for you...</p>
-        <p className="text-sm text-gray-500 text-center">This might take a moment</p>
+        <p className="text-gray-600 text-center mb-2 text-sm md:text-base">Creating challenging questions for you...</p>
+        <p className="text-xs md:text-sm text-gray-500 text-center">This might take a moment</p>
       </div>
     </div>
   );
 
   const renderError = () => (
     <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
-      <div className="bg-gradient-to-r from-[#f44336] to-[#e53935] py-6 px-8 text-center">
-        <h2 className="text-2xl font-bold text-white">Error</h2>
+      <div className="bg-gradient-to-r from-[#f44336] to-[#e53935] py-5 md:py-6 px-6 md:px-8 text-center">
+        <h2 className="text-xl md:text-2xl font-bold text-white">Error</h2>
       </div>
       
-      <div className="p-8">
-        <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="p-5 md:p-8">
+        <div className="flex justify-center mb-5 md:mb-6">
+          <div className="w-14 h-14 md:w-16 md:h-16 rounded-full bg-red-100 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-7 w-7 md:h-8 md:w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
         </div>
         
-        <h3 className="text-lg font-medium text-gray-900 text-center mb-2">Failed to Load Questions</h3>
-        <p className="text-gray-600 text-center mb-6">{error}</p>
+        <h3 className="text-lg md:text-xl font-medium text-gray-900 text-center mb-2">Failed to Load Questions</h3>
+        <p className="text-sm md:text-base text-gray-600 text-center mb-5 md:mb-6">{error}</p>
         
         <div className="flex flex-col sm:flex-row gap-3">
           <button 
             onClick={handleRetry}
-            className="py-3 px-6 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md flex-1"
+            className="py-2.5 md:py-3 px-5 md:px-6 rounded-lg bg-[#1e88e5] text-white font-medium transition-all hover:bg-[#1976d2] hover:shadow-md flex-1 text-sm md:text-base"
           >
             Try Again
           </button>
           <Link
             to="/dashboard"
-            className="py-3 px-6 rounded-lg border border-gray-300 text-gray-700 font-medium transition-all hover:bg-gray-50 flex-1 text-center"
+            className="py-2.5 md:py-3 px-5 md:px-6 rounded-lg border border-gray-300 text-gray-700 font-medium transition-all hover:bg-gray-50 flex-1 text-center text-sm md:text-base"
           >
             Back to Dashboard
           </Link>
@@ -597,23 +597,23 @@ const Questionnaire = () => {
       <Navbar />
       
       {/* Fixed positioning to center everything properly */}
-      <div className="flex-1 flex items-center justify-center py-8 px-4">
+      <div className="flex-1 flex items-center justify-center py-5 md:py-8 px-3 md:px-4">
         <div className="w-full max-w-4xl mx-auto">
           {isUploading ? (
             <div className="w-full max-w-xl mx-auto">
               <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-                <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-4 px-6">
+                <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-3 md:py-4 px-4 md:px-6">
                   <button
                     onClick={toggleUpload}
-                    className="flex items-center text-white hover:text-white/80 transition-colors font-medium"
+                    className="flex items-center text-white hover:text-white/80 transition-colors font-medium text-sm md:text-base"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 md:h-5 md:w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
                     </svg>
                     Back to Quiz
                   </button>
                 </div>
-                <div className="p-6">
+                <div className="p-4 md:p-6">
                   <UploadComponent onUploadComplete={handleUploadSuccess} />
                 </div>
               </div>

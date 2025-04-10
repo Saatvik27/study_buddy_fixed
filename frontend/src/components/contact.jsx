@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Navbar from "./navbar.jsx";
 import { sendForm } from '@emailjs/browser';
 
@@ -13,6 +13,43 @@ const Contact = () => {
 
   const [status, setStatus] = useState("");
   const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+    
+    // Adding keyframes for animations
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-15px); }
+        100% { transform: translateY(0px); }
+      }
+      
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      
+      .float {
+        animation: float 6s ease-in-out infinite;
+      }
+      
+      .float-slow {
+        animation: float 8s ease-in-out infinite;
+      }
+      
+      .fade-in {
+        animation: fadeIn 1s ease-out;
+      }
+    `;
+    document.head.appendChild(styleEl);
+
+    return () => {
+      document.head.removeChild(styleEl);
+    };
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -59,10 +96,42 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f5f9ff]">
-      <Navbar />
+    <div className="min-h-screen flex flex-col bg-[#f5f9ff] relative overflow-hidden">
+      {/* Cloud background elements - improved to match home.jsx style */}
+      <div 
+        className="absolute top-[-100px] right-[-100px] w-[400px] h-[400px] rounded-full bg-[#64b5f6]/10 z-0"
+      ></div>
+      <div 
+        className="absolute top-[-30px] left-[-30px] w-20 h-20 bg-[#bbdefb] rounded-[30%_70%_70%_30%/30%_30%_70%_70%] float-slow z-0"
+      ></div>
+      <div 
+        className="absolute top-[10%] left-[5%] w-[100px] h-[60px] bg-gradient-to-b from-white to-[#e3f2fd] rounded-[50%] float opacity-80 z-0"
+      ></div>
+      <div 
+        className="absolute top-[15%] right-[10%] w-[120px] h-[70px] bg-gradient-to-b from-white to-[#bbdefb] rounded-[60%_40%_50%_50%/50%] float-slow opacity-70 z-0"
+      ></div>
+      <div 
+        className="absolute top-[30%] left-[15%] w-[150px] h-[80px] bg-gradient-to-b from-white to-[#e3f2fd] rounded-[40%_60%_60%_40%/60%] float opacity-60 z-0"
+      ></div>
+      <div 
+        className="absolute bottom-[20%] right-[5%] w-[180px] h-[90px] bg-gradient-to-t from-[#bbdefb] to-white rounded-[60%_40%_40%_60%/60%] float opacity-70 z-0"
+      ></div>
+      <div 
+        className="absolute bottom-[40%] left-[10%] w-[130px] h-[75px] bg-gradient-to-tr from-[#e3f2fd] to-white rounded-[50%_50%_40%_60%/40%] float-slow opacity-60 z-0"
+      ></div>
+      <div 
+        className="absolute top-[65%] right-[15%] w-32 h-24 bg-gradient-to-b from-white to-[#e3f2fd] rounded-[40%_60%_50%_50%/40%] float opacity-50 z-0"
+      ></div>
+      <div 
+        className="absolute top-[45%] left-[25%] w-24 h-16 bg-gradient-to-br from-white to-[#bbdefb] rounded-[60%_40%_30%_70%/60%] float-slow opacity-60 z-0"
+      ></div>
       
-      <div className="flex-1 flex items-center justify-center p-4 md:p-8">
+      {/* Main content with higher z-index */}
+      <div className="relative z-50">
+        <Navbar />
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center p-4 md:p-8 relative z-10">
         <div className="w-full max-w-3xl">
           {/* Contact Header */}
           <div className="text-center mb-8">
