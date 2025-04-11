@@ -121,7 +121,7 @@ const FooterComponent = () => {
 
           {/* Team Links - Adjusted start position to maintain spacing */}
           <div className="md:col-span-2 md:col-start-11">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Our Team</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">Developer</h3>
             <div className="space-y-4">
               {team.map((member, index) => (
                 <div key={index} className="mb-2">
