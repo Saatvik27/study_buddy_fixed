@@ -14,9 +14,12 @@ const ChatWithUpload = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  // New state to track screen size
+  const [isMobileView, setIsMobileView] = useState(false);
   const messagesEndRef = useRef(null);
   const chatContainerRef = useRef(null);
   const textareaRef = useRef(null);
+  const mobileMenuRef = useRef(null);
   const navigate = useNavigate();
 
   // Auto-resize the textarea as content grows
@@ -52,11 +55,28 @@ const ChatWithUpload = () => {
     }
   }, [messages]);
 
+  // Set up mobile view check and window resize listener
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
   // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (isSidebarOpen && window.innerWidth < 768 && 
-          !event.target.closest('.sidebar') && 
+      if (isSidebarOpen && isMobileView && 
+          mobileMenuRef.current && 
+          !mobileMenuRef.current.contains(event.target) && 
           !event.target.closest('.sidebar-toggle')) {
         setIsSidebarOpen(false);
       }
@@ -64,7 +84,22 @@ const ChatWithUpload = () => {
     
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isSidebarOpen]);
+  }, [isSidebarOpen, isMobileView]);
+
+  // Handle body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileView) {
+      if (isSidebarOpen) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+    }
+    
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isSidebarOpen, isMobileView]);
 
   const checkVectors = async () => {
     try {
@@ -205,7 +240,7 @@ const ChatWithUpload = () => {
       ]);
     }
     // Close sidebar on mobile after selection
-    if (window.innerWidth < 768) {
+    if (isMobileView) {
       setIsSidebarOpen(false);
     }
   };
@@ -219,11 +254,11 @@ const ChatWithUpload = () => {
 
   // Custom NoDocumentsPrompt wrapper to ensure consistent styling
   const renderNoVectorsPrompt = () => (
-    <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden">
+    <div className="w-full max-w-xl bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
       <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-5 md:py-6 px-6 md:px-8 text-center">
         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white">StudyBuddy Chat</h2>
       </div>
-      <div className="p-5 md:p-8">
+      <div className="p-5 md:p-8 overflow-y-auto flex-1">
         <NoDocumentsPrompt
           featureName="chatbot"
           onUploadClick={toggleUpload}
@@ -233,120 +268,198 @@ const ChatWithUpload = () => {
     </div>
   );
 
-  return (
-    <div className="min-h-screen bg-[#f5f9ff] flex flex-col md:flex-row">
-      {/* Mobile overlay for sidebar */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-30 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
+  // Mobile drawer for chat history
+  const renderMobileDrawer = () => {
+    if (!isMobileView || !isSidebarOpen) return null;
 
-      {/* Sidebar for Chat History */}
-      <div 
-        className={`fixed md:relative top-0 left-0 h-full z-30 transition-all duration-300 ease-in-out bg-white shadow-lg border-r border-gray-200 sidebar ${
-          isSidebarOpen 
-            ? "w-72 transform-none" 
-            : "w-0 md:w-16 -translate-x-full md:translate-x-0"
-        }`}
-      >
-        <div className="h-full flex flex-col">
-          {/* Sidebar Header */}
-          <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white p-3 md:p-4 flex items-center justify-between">
-            {isSidebarOpen && <h2 className="font-medium text-sm md:text-base">Chat History</h2>}
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 animate-fadeIn">
+        <div 
+          ref={mobileMenuRef}
+          className="absolute right-0 top-0 h-full w-[80%] max-w-xs bg-white shadow-xl transform animate-slideInRight flex flex-col"
+        >
+          {/* Drawer Header */}
+          <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white p-4 flex items-center justify-between">
+            <h2 className="font-medium text-lg">Chat History</h2>
             <button 
-              onClick={toggleSidebar} 
-              className={`p-1.5 rounded-md hover:bg-blue-500/30 transition-colors ${!isSidebarOpen && "w-full flex justify-center"}`}
-              aria-label="Toggle sidebar"
+              onClick={toggleSidebar}
+              className="p-2 rounded-md hover:bg-blue-500/30 transition-colors"
+              aria-label="Close sidebar"
             >
-              {isSidebarOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
-                </svg>
-              )}
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
-
+          
           {/* Chat History Items */}
-          <div className="flex-1 overflow-y-auto py-2 px-1">
-            {isSidebarOpen ? (
-              chatHistory && chatHistory.length > 0 ? (
-                <div className="space-y-2">
-                  {chatHistory.map((chat, index) => (
-                    <button
-                      key={index}
-                      onClick={() => loadChatFromHistory(chat)}
-                      className="w-full p-2.5 text-left bg-white hover:bg-gray-100 rounded-md transition-colors border border-gray-200 group"
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="font-medium text-xs md:text-sm text-gray-800 line-clamp-1 flex-1">
-                          {chat.prompt?.substring(0, 30) || `Chat ${index + 1}`}
-                          {chat.prompt?.length > 30 ? "..." : ""}
-                        </span>
-                        <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                          {formatTimestamp(chat.timestamp)}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 line-clamp-1">
-                        {chat.response?.substring(0, 40)}
-                        {chat.response?.length > 40 ? "..." : ""}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-40 text-gray-500 text-center px-4">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                  <p className="text-sm">No chat history yet</p>
-                </div>
-              )
+          <div className="flex-1 overflow-y-auto py-2 px-3 bg-gray-50">
+            {chatHistory && chatHistory.length > 0 ? (
+              <div className="space-y-2">
+                {chatHistory.map((chat, index) => (
+                  <button
+                    key={index}
+                    onClick={() => loadChatFromHistory(chat)}
+                    className="w-full p-3 text-left bg-white hover:bg-gray-100 rounded-lg transition-colors border border-gray-200 group"
+                  >
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-medium text-sm text-gray-800 line-clamp-1 flex-1">
+                        {chat.prompt?.substring(0, 30) || `Chat ${index + 1}`}
+                        {chat.prompt?.length > 30 ? "..." : ""}
+                      </span>
+                      <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                        {formatTimestamp(chat.timestamp)}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-500 line-clamp-1">
+                      {chat.response?.substring(0, 40)}
+                      {chat.response?.length > 40 ? "..." : ""}
+                    </p>
+                  </button>
+                ))}
+              </div>
             ) : (
-              <div className="flex flex-col items-center py-2">
-                <button
-                  className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
-                  title="Chat History"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                </button>
+              <div className="flex flex-col items-center justify-center h-40 text-gray-500 text-center px-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                <p className="text-sm">No chat history yet</p>
               </div>
             )}
           </div>
           
           {/* Bottom section with options */}
-          {isSidebarOpen && (
-            <div className="p-3 border-t border-gray-200">
-              <button 
-                onClick={() => setMessages([])}
-                className="w-full py-1.5 px-2 text-gray-600 hover:bg-gray-100 rounded text-xs md:text-sm flex items-center justify-center"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 20 20" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                Clear Current Chat
-              </button>
-            </div>
-          )}
+          <div className="p-3 border-t border-gray-200">
+            <button 
+              onClick={() => {
+                setMessages([]);
+                setIsSidebarOpen(false);
+              }}
+              className="w-full py-2 px-3 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm flex items-center justify-center transition-colors"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 20 20" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              Clear Current Chat
+            </button>
+          </div>
         </div>
       </div>
+    );
+  };
 
-      {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col ${isSidebarOpen ? "md:ml-72" : "ml-0 md:ml-16"} transition-all duration-300`}>
-        <Navbar />
+  return (
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+      <Navbar />
+      
+      <div className="flex flex-1 w-full overflow-hidden">
+        {/* Desktop Sidebar for Chat History */}
+        {!isMobileView && (
+          <div 
+            className={`relative h-auto z-30 transition-all duration-300 ease-in-out bg-white shadow-lg border-r border-gray-200 ${
+              isSidebarOpen 
+                ? "w-72" 
+                : "w-16"
+            }`}
+          >
+            <div className="h-full flex flex-col">
+              {/* Sidebar Header */}
+              <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white p-4 flex items-center justify-between">
+                {isSidebarOpen && <h2 className="font-medium">Chat History</h2>}
+                <button 
+                  onClick={toggleSidebar} 
+                  className={`p-1.5 rounded-md hover:bg-blue-500/30 transition-colors ${!isSidebarOpen && "w-full flex justify-center"}`}
+                  aria-label="Toggle sidebar"
+                >
+                  {isSidebarOpen ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                    </svg>
+                  ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+                    </svg>
+                  )}
+                </button>
+              </div>
 
-        <div className="flex-1 flex flex-col items-center py-3 md:py-6 px-2 md:px-4">
+              {/* Chat History Items */}
+              <div className="flex-1 overflow-y-auto py-2 px-1">
+                {isSidebarOpen ? (
+                  chatHistory && chatHistory.length > 0 ? (
+                    <div className="space-y-2">
+                      {chatHistory.map((chat, index) => (
+                        <button
+                          key={index}
+                          onClick={() => loadChatFromHistory(chat)}
+                          className="w-full p-2.5 text-left bg-white hover:bg-gray-100 rounded-md transition-colors border border-gray-200 group"
+                        >
+                          <div className="flex justify-between items-start mb-1">
+                            <span className="font-medium text-xs md:text-sm text-gray-800 line-clamp-1 flex-1">
+                              {chat.prompt?.substring(0, 30) || `Chat ${index + 1}`}
+                              {chat.prompt?.length > 30 ? "..." : ""}
+                            </span>
+                            <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                              {formatTimestamp(chat.timestamp)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 line-clamp-1">
+                            {chat.response?.substring(0, 40)}
+                            {chat.response?.length > 40 ? "..." : ""}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-40 text-gray-500 text-center px-4">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                      <p className="text-sm">No chat history yet</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="flex flex-col items-center py-2">
+                    <button
+                      onClick={toggleSidebar}
+                      className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+                      title="Chat History"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+              </div>
+              
+              {/* Bottom section with options */}
+              {isSidebarOpen && (
+                <div className="p-3 border-t border-gray-200">
+                  <button 
+                    onClick={() => setMessages([])}
+                    className="w-full py-1.5 px-2 text-gray-600 hover:bg-gray-100 rounded text-xs md:text-sm flex items-center justify-center"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 20 20" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    Clear Current Chat
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Drawer */}
+        {renderMobileDrawer()}
+
+        {/* Main Content Area */}
+        <div className="flex-1 flex flex-col overflow-auto">
           {/* Upload Component */}
           {isUploading ? (
-            <div className="w-full max-w-xl mx-auto">
-              <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+            <div className="w-full h-full flex-1 overflow-y-auto p-4">
+              <div className="bg-white rounded-xl shadow-lg overflow-hidden max-w-xl mx-auto">
                 <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-3 md:py-4 px-4 md:px-6">
                   <button
                     onClick={toggleUpload}
@@ -358,18 +471,18 @@ const ChatWithUpload = () => {
                     Back to Chat
                   </button>
                 </div>
-                <div className="p-4 md:p-6">
+                <div className="p-4 overflow-y-auto" style={{ maxHeight: "calc(100vh - 180px)" }}>
                   <UploadComponent onUploadComplete={handleUploadSuccess} />
                 </div>
               </div>
             </div>
           ) : (
-            <div className="flex justify-center w-full h-full max-w-4xl mx-auto">
+            <div className="flex justify-center w-full h-full p-4">
               {/* No Documents Prompt */}
               {!hasVectors ? (
                 renderNoVectorsPrompt()
               ) : (
-                <div className="w-full bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)]">
+                <div className="w-full max-w-6xl bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-full">
                   {/* Chat Header */}
                   <div className="bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] py-2.5 md:py-3 px-4 md:px-6">
                     <div className="flex items-center justify-between">
@@ -397,14 +510,16 @@ const ChatWithUpload = () => {
                           </svg>
                         </button>
                         
-                        <button 
-                          onClick={toggleSidebar}
-                          className="sidebar-toggle p-2 text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                          </svg>
-                        </button>
+                        {isMobileView && (
+                          <button 
+                            onClick={toggleSidebar}
+                            className="sidebar-toggle p-2 text-white bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -522,37 +637,11 @@ const ChatWithUpload = () => {
                       <p>Press <span className="px-1.5 py-0.5 bg-gray-100 rounded border border-gray-200 text-gray-700">Enter</span> to send • <span className="px-1.5 py-0.5 bg-gray-100 rounded border border-gray-200 text-gray-700">Shift + Enter</span> for new line</p>
                     </div>
                   </div>
-                  
-                  {/* Floating Upload Button for Mobile */}
-                  <div className="md:hidden fixed right-4 bottom-20 z-10">
-                    <button
-                      onClick={toggleUpload}
-                      className="w-12 h-12 bg-[#1e88e5] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#1976d2] transition-colors"
-                      aria-label="Upload Document"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
           )}
         </div>
-      </div>
-
-      {/* Floating Chat History Toggle Button for Mobile */}
-      <div className="md:hidden fixed left-4 bottom-20 z-10">
-        <button
-          onClick={toggleSidebar}
-          className="w-12 h-12 bg-[#64b5f6] text-white rounded-full shadow-lg flex items-center justify-center hover:bg-[#42a5f5] transition-colors"
-          aria-label="Toggle Chat History"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-          </svg>
-        </button>
       </div>
     </div>
   );

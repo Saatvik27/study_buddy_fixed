@@ -16,7 +16,7 @@ const NoDocumentsPrompt = ({
         </div>
       )}
       
-      <div className="bg-white px-6 py-8 rounded-b-xl shadow-md">
+      <div className="bg-white px-6 py-8 rounded-b-xl shadow-md overflow-y-auto">
         <div className="flex justify-center mb-6">
           <div className="w-20 h-20 rounded-full bg-[#e3f2fd] flex items-center justify-center shadow-sm">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -45,15 +45,17 @@ const NoDocumentsPrompt = ({
           </ul>
         </div>
         
-        <button
-          onClick={onUploadClick}
-          className="bg-[#1e88e5] hover:bg-[#1976d2] text-white py-3 px-6 rounded-lg transition-colors shadow-sm font-medium flex items-center mx-auto"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
-          </svg>
-          {buttonText}
-        </button>
+        <div className="pb-2">
+          <button
+            onClick={onUploadClick}
+            className="bg-[#1e88e5] hover:bg-[#1976d2] text-white py-3 px-6 rounded-lg transition-colors shadow-sm font-medium flex items-center mx-auto"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0l-4 4m4-4v12" />
+            </svg>
+            {buttonText}
+          </button>
+        </div>
       </div>
     </div>
   );
