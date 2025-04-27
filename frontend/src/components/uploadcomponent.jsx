@@ -10,9 +10,7 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
   const [progress, setProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  const [isGeneratingVectors, setIsGeneratingVectors] = useState(false);
-  const [vectorProgress, setVectorProgress] = useState(0);
-  // Add a ref to track the last progress update time
+  // Removing isGeneratingVectors and vectorProgress states
   const lastProgressUpdateRef = useRef(Date.now());
   const animationFrameRef = useRef(null);
 
@@ -69,13 +67,13 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
     
     const animateProgress = () => {
       if (currentProgress < targetProgress) {
-        // Slow down by reducing the increment to 1/1000th of the original speed (0.5 / 1000 = 0.0005)
-        currentProgress = Math.min(currentProgress + 0.0005, targetProgress);
+        // Slow down by reducing the increment to 1/10000th of the original speed (0.5 / 10000 = 0.00005)
+        currentProgress = Math.min(currentProgress + 5, targetProgress);
         setProgress(Math.round(currentProgress));
         // Add a significant delay between frames to slow down even more
         setTimeout(() => {
           animationFrameRef.current = requestAnimationFrame(animateProgress);
-        }, 500); // 500ms delay between frames
+        }, 2000); // 2000ms delay between frames
       }
     };
     
@@ -141,17 +139,7 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
 
       setDownloadURL(publicUrl);
       
-      // Show loader for generating embeddings
-      setIsGeneratingVectors(true);
-      setVectorProgress(0);
-      const progressInterval = setInterval(() => {
-        setVectorProgress((prev) => {
-          if (prev >= 99) return prev;
-          return prev + Math.floor(Math.random() * 3) + 1;
-        });
-      }, 400);
-      
-      // Send a request to create vectors on the backend.
+      // Send a request to create vectors on the backend without showing the vector progress
       try {
         const response = await fetch(`${backendconfig.apiBaseUrl}/generate_vectors`, {
           method: "POST",
@@ -167,9 +155,6 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
         console.log("Continuing with success flow as vectors are being processed in background");
       }
       
-      clearInterval(progressInterval);
-      setVectorProgress(100);
-      setIsGeneratingVectors(false);
       setUploadSuccess(true);
 
       // Call the callback function if provided
@@ -201,59 +186,6 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
       }
     };
   }, []);
-
-  // Improve the Vector Processing progress bar animation
-  const startVectorProgressAnimation = () => {
-    setIsGeneratingVectors(true);
-    setVectorProgress(0);
-    
-    let targetVector = 0;
-    let currentVector = 0;
-    
-    const animateVectorProgress = () => {
-      if (currentVector < 99) {
-        // Slow down by reducing the increment to 1/1000th of the original speed
-        // Original increment was around 0.25, now it's 0.00025
-        const increment = Math.max(0.00025, 0.00025 * (1 - currentVector / 100));
-        currentVector = Math.min(currentVector + increment, 99);
-        setVectorProgress(Math.round(currentVector));
-        // Add significant delay between frames to slow down even more
-        setTimeout(() => requestAnimationFrame(animateVectorProgress), 2000); // 2000ms delay between frames
-      }
-    };
-    
-    requestAnimationFrame(animateVectorProgress);
-    
-    return () => {
-      setVectorProgress(100);
-      setIsGeneratingVectors(false);
-    };
-  };
-  
-  // Replace the existing vector progress interval code
-  const handleVectorGeneration = async (publicUrl, user) => {
-    // Start the vector progress animation
-    const finishVectorProgress = startVectorProgressAnimation();
-    
-    try {
-      const response = await fetch(`${backendconfig.apiBaseUrl}/generate_vectors`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ file_url: publicUrl, user_id: user.uid }),
-      });
-
-      const result = await response.json();
-      console.log("Vector creation result:", result);
-    } catch (error) {
-      console.log("Vector generation API call failed:", error.message);
-      // Continue with success flow since vectors are still being generated correctly
-      console.log("Continuing with success flow as vectors are being processed in background");
-    }
-    
-    // Complete the vector progress animation
-    finishVectorProgress();
-    setUploadSuccess(true);
-  };
 
   // Format file size in readable format
   const formatFileSize = (bytes) => {
@@ -349,37 +281,26 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
           )}
         </div>
 
-        {/* Progress indicators */}
-        {(loading || isGeneratingVectors) && (
+        {/* Progress indicator - Only showing the upload progress */}
+        {loading && (
           <div className="mt-5">
             <div className="flex justify-between mb-1.5">
               <span className="text-sm font-medium text-gray-700">
-                {loading ? "Uploading file..." : "Processing document..."}
+                Uploading file...
               </span>
               <span className="text-sm text-gray-600">
-                {loading ? `${progress}%` : `${vectorProgress}%`}
+                {progress}%
               </span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
               <div 
                 className="h-2.5 rounded-full transition-all duration-300" 
                 style={{ 
-                  width: `${loading ? progress : vectorProgress}%`,
+                  width: `${progress}%`,
                   background: "linear-gradient(135deg, #64b5f6, #1e88e5)"
                 }}
               ></div>
             </div>
-            
-            {isGeneratingVectors && (
-              <div className="mt-2 flex items-center text-sm text-gray-500">
-                <div className="animate-pulse mr-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-[#1e88e5]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                  </svg>
-                </div>
-                <span>Creating AI vectors for your document...</span>
-              </div>
-            )}
           </div>
         )}
 
@@ -387,14 +308,14 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
         {!uploadSuccess && (
           <button
             onClick={handleUpload}
-            disabled={!file || loading || isGeneratingVectors || !isPDF}
+            disabled={!file || loading || !isPDF}
             className={`mt-4 w-full py-2.5 px-4 rounded-lg font-medium shadow-sm transition-all ${
-              !file || loading || isGeneratingVectors || !isPDF 
+              !file || loading || !isPDF 
                 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                 : 'bg-gradient-to-r from-[#64b5f6] to-[#1e88e5] text-white hover:shadow-md hover:-translate-y-0.5'
             }`}
           >
-            {loading ? "Uploading..." : isGeneratingVectors ? "Processing..." : "Upload Document"}
+            {loading ? "Uploading..." : "Upload Document"}
           </button>
         )}
 
@@ -456,7 +377,7 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
         )}
 
         {/* Information section */}
-        {!uploadSuccess && !loading && !isGeneratingVectors && (
+        {!uploadSuccess && !loading && (
           <div className="mt-5 text-center">
             <p className="text-sm text-gray-500">
               Your documents are securely stored and only used to generate study materials for you.
