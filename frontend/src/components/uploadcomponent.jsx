@@ -10,9 +10,17 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
   const [progress, setProgress] = useState(0);
   const [dragActive, setDragActive] = useState(false);
   const [uploadSuccess, setUploadSuccess] = useState(false);
-  // Removing isGeneratingVectors and vectorProgress states
+  // Add vector generation state variables
+  const [isGeneratingVectors, setIsGeneratingVectors] = useState(false);
+  const [vectorProgress, setVectorProgress] = useState(0);
+  const [vectorError, setVectorError] = useState(null);
   const lastProgressUpdateRef = useRef(Date.now());
   const animationFrameRef = useRef(null);
+  const vectorCheckIntervalRef = useRef(null);
+  
+  // Add number of retry attempts
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
 
   const bucket = "uploads"; // Supabase storage bucket name
 
@@ -60,6 +68,8 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
 
     setLoading(true);
     setProgress(0);
+    setVectorError(null);
+    setRetryCount(0);
     
     // Set up a smoother progress animation
     let targetProgress = 0;
@@ -139,21 +149,8 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
 
       setDownloadURL(publicUrl);
       
-      // Send a request to create vectors on the backend without showing the vector progress
-      try {
-        const response = await fetch(`${backendconfig.apiBaseUrl}/generate_vectors`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ file_url: publicUrl, user_id: user.uid }),
-        });
-
-        const result = await response.json();
-        console.log("Vector creation result:", result);
-      } catch (error) {
-        console.log("Vector generation API call failed:", error.message);
-        // Continue with success flow since vectors are still being generated correctly
-        console.log("Continuing with success flow as vectors are being processed in background");
-      }
+      // Start vector generation with progress tracking
+      await generateVectors(publicUrl, user.uid);
       
       setUploadSuccess(true);
 
@@ -173,6 +170,10 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      
+      // Reset states on error
+      setVectorError(error.message);
+      setIsGeneratingVectors(false);
     } finally {
       setLoading(false);
     }
@@ -186,6 +187,121 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
       }
     };
   }, []);
+
+  // Cleanup effect for vector check interval
+  useEffect(() => {
+    return () => {
+      if (vectorCheckIntervalRef.current) {
+        clearInterval(vectorCheckIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Function to handle vector generation and check if vectors were created
+  const generateVectors = async (fileUrl, userId) => {
+    setIsGeneratingVectors(true);
+    setVectorProgress(0);
+    
+    try {
+      // Start a simulated progress animation for vector generation
+      let simulatedProgress = 0;
+      const progressInterval = setInterval(() => {
+        // Gradually increase progress to 95% (the final 5% will be when we confirm vectors exist)
+        simulatedProgress += 1;
+        if (simulatedProgress >= 95) {
+          clearInterval(progressInterval);
+          simulatedProgress = 95;
+        }
+        setVectorProgress(simulatedProgress);
+      }, 500);
+      
+      // Call the vector generation API
+      const response = await fetch(`${backendconfig.apiBaseUrl}/generate_vectors`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          file_url: fileUrl,
+          user_id: userId,
+        }),
+      });
+
+      clearInterval(progressInterval);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to generate vectors");
+      }
+      
+      // Once vector generation is called, poll to check if vectors exist
+      await checkVectorsExist(userId);
+      
+      setVectorProgress(100);
+      setIsGeneratingVectors(false);
+      return true;
+      
+    } catch (error) {
+      console.error("Vector generation error:", error);
+      setVectorError(error.message);
+      
+      // Retry logic for vector generation
+      if (retryCount < MAX_RETRIES) {
+        setRetryCount(prev => prev + 1);
+        console.log(`Retrying vector generation (${retryCount + 1}/${MAX_RETRIES})...`);
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds before retry
+        return generateVectors(fileUrl, userId);
+      } else {
+        setIsGeneratingVectors(false);
+        throw error; // Propagate error after max retries
+      }
+    }
+  };
+  
+  // Function to check if vectors exist for the user
+  const checkVectorsExist = async (userId) => {
+    return new Promise((resolve, reject) => {
+      let attempts = 0;
+      const maxAttempts = 30; // Maximum 30 attempts (5 minutes total with 10-second interval)
+      
+      // Clear any existing interval
+      if (vectorCheckIntervalRef.current) {
+        clearInterval(vectorCheckIntervalRef.current);
+      }
+      
+      // Set up polling interval
+      vectorCheckIntervalRef.current = setInterval(async () => {
+        attempts++;
+        
+        try {
+          const response = await fetch(`${backendconfig.apiBaseUrl}/check_vectors`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId }),
+          });
+          
+          if (!response.ok) {
+            throw new Error("Failed to check vector status");
+          }
+          
+          const data = await response.json();
+          
+          if (data.exists) {
+            // Vectors exist, we're done!
+            clearInterval(vectorCheckIntervalRef.current);
+            resolve(true);
+          } else if (attempts >= maxAttempts) {
+            // Exceeded maximum attempts
+            clearInterval(vectorCheckIntervalRef.current);
+            reject(new Error("Timeout waiting for vectors to be generated"));
+          }
+        } catch (error) {
+          console.error("Error checking vectors:", error);
+          // Don't reject here, just continue polling
+        }
+      }, 10000); // Check every 10 seconds
+    });
+  };
 
   // Format file size in readable format
   const formatFileSize = (bytes) => {
@@ -300,6 +416,58 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
                   background: "linear-gradient(135deg, #64b5f6, #1e88e5)"
                 }}
               ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Vector generation progress indicator */}
+        {isGeneratingVectors && (
+          <div className="mt-5">
+            <div className="flex justify-between mb-1.5">
+              <span className="text-sm font-medium text-gray-700">
+                Generating document vectors... {retryCount > 0 ? `(Retry ${retryCount}/${MAX_RETRIES})` : ''}
+              </span>
+              <span className="text-sm text-gray-600">
+                {vectorProgress}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2.5 overflow-hidden">
+              <div 
+                className="h-2.5 rounded-full transition-all duration-300" 
+                style={{ 
+                  width: `${vectorProgress}%`,
+                  background: "linear-gradient(135deg, #81c784, #4caf50)"
+                }}
+              ></div>
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Please wait while we analyze your document. This may take a few minutes.
+            </p>
+          </div>
+        )}
+
+        {/* Vector generation error */}
+        {vectorError && !isGeneratingVectors && (
+          <div className="mt-5 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-start">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-500 mt-0.5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="text-sm font-medium text-red-800">Vector generation failed</p>
+                <p className="text-xs text-red-600 mt-0.5">
+                  {vectorError}. Your file was uploaded but may not work correctly.
+                </p>
+                <button 
+                  onClick={() => {
+                    setVectorError(null);
+                    generateVectors(downloadURL, getAuth().currentUser.uid);
+                  }}
+                  className="mt-2 text-xs font-medium text-red-700 hover:text-red-800 underline"
+                >
+                  Try again
+                </button>
+              </div>
             </div>
           </div>
         )}
