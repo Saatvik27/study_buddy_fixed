@@ -15,6 +15,7 @@ import Questionnaire from "./components/questionnaire";
 import ChatBot from "./components/chatbot";
 import Flashcards from "./components/flashcards";
 import ComingSoon from "./components/comingsoon";
+import FirebaseTest from "./components/firebasetest";
 
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
           <Route path='/chatbot' element={<ChatBot />} />
           <Route path='/flashcards' element={<Flashcards />} />
           <Route path='/analyze' element={<ComingSoon />} />
+          <Route path='/firebase-test' element={<FirebaseTest />} />
           <Route 
             path='/profile' 
             element={

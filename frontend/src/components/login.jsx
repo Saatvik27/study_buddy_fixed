@@ -3,7 +3,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, googleProvider} from '../firebase/firebaseconfig.js';
-import { signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../contexts/usercontext.jsx';
 import { AuthModeContext } from '../contexts/authmodecontext.jsx';
 
@@ -219,17 +219,35 @@ const Login = () => {
   // Handler for navigating to forgot password screen
   const handleForgotPassword = () => {
     navigate('/forgotpassword');
-  };
-  // Handler for Google Sign-In
+  };  // Handler for Google Sign-In using popup (more reliable than redirect)
   const handleGoogleSignIn = async () => {
     try {
       setIsProcessingRedirect(true);
-      await signInWithRedirect(auth, googleProvider);
-      // The redirect will handle the rest - user will be redirected to Google
-      // and then back to this page where useEffect will handle the result
+      console.log('Starting Google Sign-In...');
+      
+      // Try popup first (more reliable)
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+        setUser(user);
+        console.log("Google Sign-In Successful:", user);
+        alert("Signed In with Google Successfully!");
+        navigate('/');
+      } catch (popupError) {
+        console.log('Popup failed, trying redirect...', popupError);
+        
+        // Fallback to redirect if popup is blocked
+        if (popupError.code === 'auth/popup-blocked' || popupError.code === 'auth/popup-closed-by-user') {
+          await signInWithRedirect(auth, googleProvider);
+          // The redirect will handle the rest
+        } else {
+          throw popupError;
+        }
+      }
     } catch (error) {
       console.error("Google Sign-In Error:", error);
       alert(`Google Sign-In Error: ${error.message}`);
+    } finally {
       setIsProcessingRedirect(false);
     }
   };
