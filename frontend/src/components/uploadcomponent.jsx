@@ -91,7 +91,12 @@ const UploadComponent = ({ onUploadComplete, className = "" }) => {
 
     try {
       const timestamp = Date.now();
-      const filePath = `public/${timestamp}-${file.name}`;
+      // Remove invalid characters (e.g., brackets) from filename for Supabase key
+      // Convert to lowercase and replace invalid characters for Supabase key
+      const safeFileName = file.name
+        .toLowerCase()
+        .replace(/[^a-z0-9._-]/g, '_');
+      const filePath = `public/${timestamp}-${safeFileName}`;
 
       // Upload file to Supabase Storage with progress tracking
       const { data, error } = await supabase.storage
