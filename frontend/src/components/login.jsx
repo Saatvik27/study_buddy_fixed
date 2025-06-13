@@ -1,9 +1,9 @@
 // frontend/src/components/Login.jsx
 
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, googleProvider} from '../firebase/firebaseconfig.js';
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../contexts/usercontext.jsx';
 import { AuthModeContext } from '../contexts/authmodecontext.jsx';
 
@@ -13,6 +13,9 @@ const Login = () => {
   
   // Local state for mobile mode only - separate from desktop
   const [mobileIsSignUp, setMobileIsSignUp] = useState(false);
+
+  // Add loading state for redirect
+  const [isProcessingRedirect, setIsProcessingRedirect] = useState(false);
 
   // Password visibility states
   const [showSignInPassword, setShowSignInPassword] = useState(false);
@@ -39,6 +42,30 @@ const Login = () => {
 
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);
+
+  // Handle redirect result from Google Sign-In
+  useEffect(() => {
+    const handleRedirectResult = async () => {
+      try {
+        setIsProcessingRedirect(true);
+        const result = await getRedirectResult(auth);
+        if (result) {
+          const user = result.user;
+          setUser(user);
+          console.log("Google Sign-In Successful:", user);
+          alert("Signed In with Google Successfully!");
+          navigate('/');
+        }
+      } catch (error) {
+        console.error("Google Sign-In Redirect Error:", error);
+        alert(`Google Sign-In Error: ${error.message}`);
+      } finally {
+        setIsProcessingRedirect(false);
+      }
+    };
+
+    handleRedirectResult();
+  }, [navigate, setUser]);
 
   // Toggle between Sign In and Sign Up modes using context (for desktop)
   const handleToggleMode = () => {
@@ -193,19 +220,17 @@ const Login = () => {
   const handleForgotPassword = () => {
     navigate('/forgotpassword');
   };
-
   // Handler for Google Sign-In
   const handleGoogleSignIn = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      setUser(user);
-      console.log("Google Sign-In Successful:", user);
-      alert("Signed In with Google Successfully!");
-      navigate('/');
+      setIsProcessingRedirect(true);
+      await signInWithRedirect(auth, googleProvider);
+      // The redirect will handle the rest - user will be redirected to Google
+      // and then back to this page where useEffect will handle the result
     } catch (error) {
       console.error("Google Sign-In Error:", error);
       alert(`Google Sign-In Error: ${error.message}`);
+      setIsProcessingRedirect(false);
     }
   };
 
@@ -249,15 +274,24 @@ const Login = () => {
             <h2 className="text-2xl font-bold text-[#1e88e5] mb-4 text-center">
               {mobileIsSignUp ? "Create Account" : "Welcome Back"}
             </h2>
-            
-            <div className="flex justify-center w-full mb-4">
+              <div className="flex justify-center w-full mb-4">
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
-                className="flex items-center justify-center w-full max-w-[320px] px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-all shadow-sm"
+                disabled={isProcessingRedirect}
+                className="flex items-center justify-center w-full max-w-[320px] px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <GoogleIcon />
-                <span className="ml-2">Continue with Google</span>
+                {isProcessingRedirect ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-gray-600 rounded-full mr-2"></div>
+                    <span>Redirecting to Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon />
+                    <span className="ml-2">Continue with Google</span>
+                  </>
+                )}
               </button>
             </div>
             
@@ -490,17 +524,23 @@ const Login = () => {
         <div className="relative w-full h-full">
           {/* Sign In Form - Always positioned at left side */}
           <div className={`absolute top-0 left-0 w-1/2 h-full transition-opacity duration-500 ${!isSignUpMode ? 'opacity-100 z-20' : 'opacity-0 z-10'}`}>
-            <div className="flex flex-col items-center justify-center h-full bg-white p-4 md:p-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#1e88e5] mb-4 md:mb-6">Welcome Back</h2>
+            <div className="flex flex-col items-center justify-center h-full bg-white p-4 md:p-6">              <h2 className="text-2xl md:text-3xl font-bold text-[#1e88e5] mb-4 md:mb-6">Welcome Back</h2>
               
               <div className="flex justify-between space-x-4 w-[90%] max-w-[320px]">
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  className="flex items-center justify-center w-full px-3 py-2 text-xs md:text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-all shadow-sm"
+                  disabled={isProcessingRedirect}
+                  className="flex items-center justify-center w-full px-3 py-2 text-xs md:text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <GoogleIcon />
-                  <span className="ml-2">Continue with Google</span>
+                  {isProcessingRedirect ? (
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                  ) : (
+                    <>
+                      <GoogleIcon />
+                      <span className="ml-2">Continue with Google</span>
+                    </>
+                  )}
                 </button>
               </div>
               
@@ -593,17 +633,22 @@ const Login = () => {
 
           {/* Sign Up Form - Always positioned at right side */}
           <div className={`absolute top-0 right-0 w-1/2 h-full transition-opacity duration-500 ${isSignUpMode ? 'opacity-100 z-20' : 'opacity-0 z-10'}`}>
-            <div className="flex flex-col items-center justify-center h-full bg-white p-4 md:p-6">
-              <h2 className="text-2xl md:text-3xl font-bold text-[#1e88e5] mb-4 md:mb-6">Create Account</h2>
+            <div className="flex flex-col items-center justify-center h-full bg-white p-4 md:p-6">              <h2 className="text-2xl md:text-3xl font-bold text-[#1e88e5] mb-4 md:mb-6">Create Account</h2>
               
               <div className="flex justify-between space-x-4 w-[90%] max-w-[320px]">
                 <button
                   type="button"
                   onClick={handleGoogleSignIn}
-                  className="flex items-center justify-center w-full px-3 py-2 text-xs md:text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-all shadow-sm"
+                  disabled={isProcessingRedirect}
+                  className="flex items-center justify-center w-full px-3 py-2 text-xs md:text-sm font-medium text-gray-700 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <GoogleIcon />
-                  <span className="ml-2">Continue with Google</span>
+                  {isProcessingRedirect ? (
+                    <div className="animate-spin h-4 w-4 border-2 border-gray-300 border-t-gray-600 rounded-full"></div>
+                  ) : (
+                    <>
+                      <GoogleIcon />
+                      <span className="ml-2">Continue with Google</span>                    </>
+                  )}
                 </button>
               </div>
               

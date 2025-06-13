@@ -25,3 +25,7 @@ dist-ssr
 
 .env
 studybuddy-681c2-firebase-adminsdk-fbsvc-d5c7bd9100.json
+
+# Backend folders
+backend/
+study_buddy_backend/
