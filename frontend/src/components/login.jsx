@@ -3,7 +3,7 @@
 import React, { useState, useContext, useEffect } from "react";
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, googleProvider} from '../firebase/firebaseconfig.js';
-import { signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, getRedirectResult, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { UserContext } from '../contexts/usercontext.jsx';
 import { AuthModeContext } from '../contexts/authmodecontext.jsx';
 
@@ -223,10 +223,18 @@ const Login = () => {
   // Handler for Google Sign-In
   const handleGoogleSignIn = async () => {
     try {
+      console.log("Starting Google Sign-In...");
       setIsProcessingRedirect(true);
-      await signInWithRedirect(auth, googleProvider);
-      // The redirect will handle the rest - user will be redirected to Google
-      // and then back to this page where useEffect will handle the result
+      
+      // Use popup instead of redirect to avoid domain issues
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      
+      console.log("Google Sign-In Successful:", user);
+      setUser(user);
+      alert("Signed In with Google Successfully!");
+      navigate('/');
+      
     } catch (error) {
       console.error("Google Sign-In Error:", error);
       alert(`Google Sign-In Error: ${error.message}`);
